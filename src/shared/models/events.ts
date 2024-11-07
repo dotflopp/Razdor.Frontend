@@ -1,21 +1,25 @@
-export class NormalEvent<T extends (...args: any)  => void >{
-    private _listeners: Set<T>
+interface EventListener<TEventArgs> {
+    (args: TEventArgs): void;
+}
+
+export class EventProducer<TEventArgs>{
+    private _listeners: Set<EventListener<TEventArgs>>
 
     constructor(){
-        this._listeners = new Set<T>
+        this._listeners = new Set<EventListener<TEventArgs>>
     }
 
-    invoke(...args: any){
+    invoke(args: TEventArgs): void {
         this._listeners.forEach((listener) => {
-            listener.call(args)
+            listener(args)
         })
     }
     
-    addListener(callback: T){
+    addListener(callback: EventListener<TEventArgs>) : void{
         this._listeners.add(callback)
     }
     
-    removeListener(callback: T){
+    removeListener(callback: EventListener<TEventArgs>): void{
         this._listeners.delete(callback)
     }
 }
