@@ -1,41 +1,29 @@
 <script setup lang="ts">
 import type { RefSymbol } from '@vue/reactivity';
 import { onMounted, ref } from 'vue';
-import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr'; 
+import PeerConnection from '@/app/webrtc';
 
-let videoContainerRef = ref<HTMLVideoElement | null>(null); 
+let localVideoRef = ref<HTMLVideoElement | null>(null); 
+let remoteVideoRef = ref<HTMLVideoElement | null>(null); 
 
-//http://26.201.58.143:5154/swagger
-//соединение с сокетами
-let connection = new HubConnectionBuilder()
-  .withUrl('http://26.201.58.143:5154/signaling')
-  .configureLogging(LogLevel.Error)
-  .build()
-
-async function start() {
-    try {
-        await connection.start();
-        console.error("SignalR Connected.");
-    } catch (err) {
-        //setTimeout(start, 5000);
-        console.error(err)
-    }
-};
-
+let localStreamSrc: MediaStream
+let peerConnection: PeerConnection
+let remoteStreamSrc: MediaStream
 
 let initStreamAsync = async () => {
   //видео контент
-  if (videoContainerRef.value == null) return
-  let streamSrc = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
-  videoContainerRef.value.srcObject = streamSrc;
+  if (localVideoRef.value == null) return
+  localStreamSrc = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
+  localVideoRef.value.srcObject = localStreamSrc;
 
-  let message = "Пойдем в доту 2"
-  
-  start()
-  //послать
-  console.log('привет')
-  await connection.invoke("SendMessage", message);
+
+
+  peerConnection = new PeerConnection()
+  await peerConnection.createPeerConection(localStreamSrc, remoteVideoRef.value!)
+
+  await peerConnection.startCall()
 }
+
 
 onMounted(initStreamAsync)
 
@@ -43,6 +31,7 @@ onMounted(initStreamAsync)
 
 <template>
   <div class="video__container">
-    <video ref="videoContainerRef" class="video-player" autoplay playsinline></video>
+    <video ref="localVideoRef" class="video-player" autoplay playsinline></video>
+    <video ref="remoteVideoRef" class="video-player" autoplay playsinline></video>
   </div>
 </template>
