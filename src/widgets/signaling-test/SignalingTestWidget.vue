@@ -72,10 +72,11 @@ onMounted(initStreamAsync)
 .video-player{
     background-color: black;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: 100vh;
 }
-
+.video-player:first-child {
+  object-fit: cover;
+}
 #user-2{
     display: none;
 }
