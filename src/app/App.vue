@@ -6,7 +6,11 @@ import { RouterView } from 'vue-router'
   <RouterView />
 </template>
 
-<style scoped>
+<style >
+body {
+  background-color: #1a1a1a;
+    color: #fff;
+}
 header {
   line-height: 1.5;
   max-height: 100vh;
