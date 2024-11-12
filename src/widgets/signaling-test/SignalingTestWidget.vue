@@ -5,6 +5,8 @@ import PeerConnection from '@/app/webrtc';
 
 let localVideoRef = ref<HTMLVideoElement | null>(null); 
 let remoteVideoRef = ref<HTMLVideoElement | null>(null); 
+let cameraRef = ref<HTMLElement | null>(null)
+let micRef = ref<HTMLElement  | null>(null)
 
 let localStreamSrc: MediaStream
 let peerConnection: PeerConnection
@@ -13,7 +15,7 @@ let remoteStreamSrc: MediaStream
 let initStreamAsync = async () => {
   //видео контент
   if (localVideoRef.value == null) return
-  localStreamSrc = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
+  localStreamSrc = await navigator.mediaDevices.getUserMedia({video: true, audio: true})
   localVideoRef.value.srcObject = localStreamSrc;
 
 
@@ -22,7 +24,38 @@ let initStreamAsync = async () => {
   await peerConnection.createPeerConection(localStreamSrc, remoteVideoRef.value!)
 
   await peerConnection.startCall()
+
+  //регистрация ивентов
+  cameraRef.value.addEventListener('click', toggleCamera)
+  micRef.value.addEventListener('click', toggleMic)
 }
+
+//заплатка с рег
+let toggleCamera = async () => {
+    let videoTrack = localStreamSrc.getTracks().find(track => track.kind === 'video')
+
+    if(videoTrack.enabled){
+        videoTrack.enabled = false
+        document.getElementById('camera-btn').style.backgroundColor = 'rgb(255, 80, 80)'
+    }else{
+        videoTrack.enabled = true
+        document.getElementById('camera-btn').style.backgroundColor = 'rgb(179, 102, 249, .9)'
+    }
+}
+
+let toggleMic = async () => {
+    let audioTrack = localStreamSrc.getTracks().find(track => track.kind === 'audio')
+
+    if(audioTrack.enabled){
+        audioTrack.enabled = false
+        document.getElementById('mic-btn').style.backgroundColor = 'rgb(255, 80, 80)'
+    }else{
+        audioTrack.enabled = true
+        document.getElementById('mic-btn').style.backgroundColor = 'rgb(179, 102, 249, .9)'
+    }
+}
+//document.getElementById('camera-btn').addEventListener('click', toggleCamera)
+//document.getElementById('mic-btn').addEventListener('click', toggleMic)
 
 
 onMounted(initStreamAsync)
@@ -38,11 +71,11 @@ onMounted(initStreamAsync)
 
   <!-- контроллеры -->
   <div id="controls">
-    <div class="control-container" id="camera-btn">
+    <div ref="cameraRef" class="control-container" id="camera-btn">
       <img src="/assets/camera.png" /> 
     </div>
 
-    <div class="control-container" id="mic-btn">
+    <div ref="micRef" class="control-container" id="mic-btn">
       <img src="/assets/mic.png" />
     </div>
 
@@ -93,7 +126,6 @@ onMounted(initStreamAsync)
     box-shadow: 3px 3px 15px -1px rgba(0,0,0,0.77);
     z-index: 999;
 }
-
 
 #controls{
     position: fixed;
