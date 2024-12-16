@@ -5,12 +5,16 @@ import PeerConnection from '@/app/webrtc';
 
 let localVideoRef = ref<HTMLVideoElement | null>(null); 
 let remoteVideoRef = ref<HTMLVideoElement | null>(null); 
-let cameraRef = ref<HTMLElement | null>(null)
-let micRef = ref<HTMLElement  | null>(null)
+let cameraRef = ref<HTMLElement|null>(null)
+let micRef = ref<HTMLElement|null>(null)
 
 let localStreamSrc: MediaStream
 let peerConnection: PeerConnection
 let remoteStreamSrc: MediaStream
+
+let cameraBtnStyle = ref<any | null>(null)
+let micBtnStyle = ref<any | null>(null)
+
 
 let initStreamAsync = async () => {
   //видео контент
@@ -26,32 +30,32 @@ let initStreamAsync = async () => {
   await peerConnection.startCall()
 
   //регистрация ивентов
-  cameraRef.value.addEventListener('click', toggleCamera)
-  micRef.value.addEventListener('click', toggleMic)
+  cameraRef?.value?.addEventListener('click', toggleCamera)
+  micRef?.value?.addEventListener('click', toggleMic)
 }
 
 //заплатка с рег
 let toggleCamera = async () => {
     let videoTrack = localStreamSrc.getTracks().find(track => track.kind === 'video')
 
-    if(videoTrack.enabled){
-        videoTrack.enabled = false
-        document.getElementById('camera-btn').style.backgroundColor = 'rgb(255, 80, 80)'
+    if(videoTrack!.enabled){
+        videoTrack!.enabled = false
+        cameraBtnStyle.value = { backgroundColor: 'rgb(255, 80, 80)' }
     }else{
-        videoTrack.enabled = true
-        document.getElementById('camera-btn').style.backgroundColor = 'rgb(179, 102, 249, .9)'
+        videoTrack!.enabled = true
+        cameraBtnStyle.value = { backgroundColor: 'rgb(179, 102, 249, .9)' }
     }
 }
 
 let toggleMic = async () => {
     let audioTrack = localStreamSrc.getTracks().find(track => track.kind === 'audio')
 
-    if(audioTrack.enabled){
-        audioTrack.enabled = false
-        document.getElementById('mic-btn').style.backgroundColor = 'rgb(255, 80, 80)'
+    if(audioTrack!.enabled){
+        audioTrack!.enabled = false
+        micBtnStyle.value = { backgroundColor: 'rgb(255, 80, 80)'}
     }else{
-        audioTrack.enabled = true
-        document.getElementById('mic-btn').style.backgroundColor = 'rgb(179, 102, 249, .9)'
+        audioTrack!.enabled = true
+        micBtnStyle.value = { backgroundColor: 'rgb(179, 102, 249, .9)' }
     }
 }
 //document.getElementById('camera-btn').addEventListener('click', toggleCamera)
@@ -71,11 +75,11 @@ onMounted(initStreamAsync)
 
   <!-- контроллеры -->
   <div id="controls">
-    <div ref="cameraRef" class="control-container" id="camera-btn">
+    <div ref="cameraRef" class="control-container" id="camera-btn" v-bind:style="cameraBtnStyle">
       <img src="/assets/camera.png" /> 
     </div>
 
-    <div ref="micRef" class="control-container" id="mic-btn">
+    <div ref="micRef" class="control-container" id="mic-btn" v-bind:style="micBtnStyle">
       <img src="/assets/mic.png" />
     </div>
 
