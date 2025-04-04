@@ -1,33 +1,11 @@
-# razdor-vue
+# Welcome to Razdor.Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+## How to run 
+1) Clone repository
+2) Go to project directory
+3) Then write in cmd >npm i
+4) And >npm run dev
+5) If you need switch address you can do this in src>app>webrtc.ts on line 13 
+6) Build and use [Backend](https://github.com/dotflopp/Razdor.Backend)
 
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
+If you have any issues with live streaming, please [write it](https://github.com/dotflopp/Razdor.Frontend/issues)

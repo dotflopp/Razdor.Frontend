@@ -6,7 +6,7 @@ import type { InstanceofExpression } from 'typescript';
 class PeerConnection {
   private peerConnection: RTCPeerConnection;
   private signalR: SignalR | undefined;
-  private apiClient: RestApiClient 
+  private apiClient: RestApiClient; 
   private session: ISession | undefined
 
   constructor() {
