@@ -17,6 +17,7 @@ let micBtnStyle = ref<any | null>(null)
 
 
 let initStreamAsync = async () => {
+
   //видео контент
   if (localVideoRef.value == null) return
   localStreamSrc = await navigator.mediaDevices.getUserMedia({video: true, audio: true})

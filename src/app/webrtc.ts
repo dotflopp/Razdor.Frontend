@@ -2,6 +2,13 @@ import SignalR from '@/app/signalr';
 import { RestApiClient, type ISession } from '@/app/apiClient';
 import type { InstanceofExpression } from 'typescript';
 
+// Настройки STUN-сервера
+const configuration = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' }, // STUN-сервер
+  ],
+};
+
 //синглтон для хранения текущего пира 
 class PeerConnection {
   private peerConnection: RTCPeerConnection;
@@ -10,8 +17,8 @@ class PeerConnection {
   private session: ISession | undefined
 
   constructor() {
-    this.apiClient = new RestApiClient('http://26.201.58.143:5154/');
-    this.peerConnection = new RTCPeerConnection();
+    this.apiClient = new RestApiClient('http://26.101.132.34:5154/');
+    this.peerConnection = new RTCPeerConnection(configuration);
   }
 
   public createPeerConection = async (localStream: MediaStream, remoteVideo: HTMLVideoElement) => {
@@ -22,7 +29,7 @@ class PeerConnection {
         type: 2
     })
     
-    this.signalR = new SignalR(this.session.server);
+    this.signalR = new SignalR("http://26.101.132.34:5154/signaling");
     console.log(this.session.server)
     this.registerSocketHandlers(this.session.sessionId);
 
