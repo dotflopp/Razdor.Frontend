@@ -1,5 +1,5 @@
 import  {  HubConnectionBuilder, HubConnection, LogLevel, HttpTransportType} from '@microsoft/signalr'; 
-
+//класс для взаимодействия с сокетом
 class SignalR {
   public connection: HubConnection 
   constructor(url: string) {

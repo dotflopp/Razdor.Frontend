@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { RefSymbol } from '@vue/reactivity';
 import { onMounted, ref } from 'vue';
-import PeerConnection from '@/app/webrtc';
+import PeerConnection from '@/entities/api/apiWebrtc';
 
 let localVideoRef = ref<HTMLVideoElement | null>(null); 
 let remoteVideoRef = ref<HTMLVideoElement | null>(null); 
@@ -85,9 +85,11 @@ onMounted(initStreamAsync)
     </div>
 
     <a href="lobby.html">
-      <div class="control-container" id="leave-btn">
+      <router-link to="/main">
+        <div class="control-container" id="leave-btn">
           <img src="/assets/phone.png" />
-      </div>
+        </div>
+      </router-link>
     </a>
   </div>
 </template>

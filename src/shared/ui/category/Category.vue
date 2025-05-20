@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { classicNameResolver } from 'typescript';
 import { isVNode } from 'vue';
-import { Title } from "../"
+import { Title } from ".."
 
     const props = defineProps<{
         title: string,
