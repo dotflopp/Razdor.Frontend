@@ -1,28 +1,46 @@
 import SignalR from '@/entities/services/signalr';
 import { RestApiClient, type ISession } from '@/entities/api/apiClient';
-import type { InstanceofExpression } from 'typescript';
+
 
 // Настройки STUN-сервера
 const configuration = {
+  sdpSemantics: 'unified-plan',
   iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' }, // STUN-сервер
+    { urls: 'turn:fr-turn2.xirsys.com:3478?transport=udp',
+      username: "b_x8c3H9otu8vC-LwmnAsPdEQnWlh_zHf54JGX8KJx2wBztiX1udhli1_MK6sxHMAAAAAGcuKjdMdWt1cw==",
+      credential: "c8628fa0-9de3-11ef-a83d-0242ac120004"
+     }, // STUN-сервер
   ],
+  encodedInsertabelStream: true,
+  forceVideoCodec: 'VP8'
 };
 
-//синглтон для хранения текущего пира 
-class PeerConnection {
+// Класс для создания пиир соединения 
+class WebRtcConnection {
   private peerConnection: RTCPeerConnection;
-  private signalR: SignalR | undefined;
+  private signalR: SignalR;
   private apiClient: RestApiClient; 
-  private session: ISession | undefined
+  private session: ISession | undefined;
+  private localStream: MediaStream;
 
-  constructor() {
+  // Добавляем очередь для кандидатов
+  private pendingCandidates: RTCIceCandidate[] = [];
+
+  constructor(localStream: MediaStream, ) {
     this.apiClient = new RestApiClient('http://26.101.132.34:5154/');
     this.peerConnection = new RTCPeerConnection(configuration);
+    //получаем все треки(аудио видео дорожки) у локального стрима 
+    this.localStream = localStream;
+    this.localStream.getTracks().forEach(track => {
+      this.peerConnection.addTrack(track, localStream)
+    })
+    
+    this.signalR = new SignalR("http://26.101.132.34:5154/signaling");
   }
 
   //создаем соединение между Peer, устанавливаеи прослушивающие сокеты
-  public createPeerConection = async (localStream: MediaStream, remoteVideo: HTMLVideoElement) => {
+  public createPeerConnection = async (remoteVideo: HTMLVideoElement) => {
+    //поменять в будущем 
     this.session = await this.apiClient.joinToVoiceChannel({
         id: 1,
         name: 'floppa',
@@ -30,38 +48,47 @@ class PeerConnection {
         type: 2
     })
     
-    //устанавливаем прослушивающие сокеты signalR 
-    this.signalR = new SignalR("http://26.101.132.34:5154/signaling");
+    //регистрация сокетов
     this.registerSocketHandlers(this.session.sessionId);
 
-    //отправляем сигнал signalR на старт соединения между сокетами 
+    //старт signalR 
     await this.signalR.startingConnection();
     
-    //получаем все треки(аудио видео дорожки) у локального стрима 
-    localStream.getTracks().forEach(track => {
-      this.peerConnection.addTrack(track, localStream)
-    })
+    //регестрируем обработчики
 
     // под вопросом, стоит вынести в отдельный метод
-    this.peerConnection.ontrack = event => {
+    this.peerConnection.ontrack = event =>  {
+      console.log("Видео поток пришел")
       remoteVideo.srcObject = event.streams[0]
     }
 
-    //устанавливаем ивент на получение айс кондидата
-    this.peerConnection.onicecandidate = event => {
-      //console.log('emit icecandidate from local')
-      if(event.candidate) {
-        this.signalR?.connection.invoke("Icecandidate", this.session?.sessionId, event.candidate)
-        //console.log('send icecandidate')
-      }
+    //получение ice кандидата
+    this.peerConnection.onicecandidate = this.handleICECandidateEvent
+    this.peerConnection.onconnectionstatechange = this.handleSignalingSateEvent
+    this.peerConnection.onicegatheringstatechange = this.handleIceConnectionStateChangeEvent;
+  }
+  private handleIceConnectionStateChangeEvent = (event: Event) => {
+    console.log(event);
+  };
+
+  private handleSignalingSateEvent = (event: Event) => {
+    //console.log(event);
+  }
+
+  private handleICECandidateEvent = (event: RTCPeerConnectionIceEvent) => {
+    if(event.candidate) {
+      console.log('кандидат полетел без ошибок ')
+      this.signalR?.connection.invoke("Icecandidate", this.session?.sessionId, event.candidate)
+      //console.log('send icecandidate')
     }
   }
   
+
   private registerSocketHandlers = (sessionId: string) => {
     this.signalR?.connection.on("Offer", async (offerData) => {
       console.log('emit offer from another peer')
-      // set remote description
-      console.log(offerData.offer)
+      const sessionDesc = new RTCSessionDescription(offerData.offer);
+      console.log(sessionDesc.sdp);
       await this.peerConnection.setRemoteDescription(offerData.offer);
       const answer = await this.peerConnection.createAnswer();
       await this.peerConnection.setLocalDescription(answer);
@@ -73,16 +100,35 @@ class PeerConnection {
       console.log('emit answer from another peer')
       // set remote description
       await this.peerConnection.setRemoteDescription(answer);
+
+      // Применяем отложенные кандидаты
+      for (const candidate of this.pendingCandidates) {
+        await this.peerConnection.addIceCandidate(candidate);
+      }
+      this.pendingCandidates = [];
+
       this.signalR?.connection.send("end-call", this.session?.sessionId);
       
     });
   
     this.signalR?.connection.on("Icecandidate", async (candidate) => {
-      console.log('emit icecandidate from server')
-      //добавляем себе айс кандидата
-      await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
-    })
+      if (candidate) {
+        if (!this.peerConnection.remoteDescription) {
+          // Если remoteDescription ещё не установлен — сохраняем в очередь
+          this.pendingCandidates.push(new RTCIceCandidate(candidate));
+        } else {
+          // Иначе применяем сразу
+          await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+      
 
+      // console.log('emit icecandidate from server')
+      // //добавляем себе айс кандидата
+      // if(candidate) {
+      //   await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
+      // }
+      }
+    })
     this.signalR?.connection.on("CallEnded", async () => {
       this.endCall()
     })
@@ -107,4 +153,4 @@ class PeerConnection {
   }
 }
 
-export default PeerConnection
+export default WebRtcConnection

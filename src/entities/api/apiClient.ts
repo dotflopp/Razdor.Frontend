@@ -38,6 +38,5 @@ class RestApiClient {
   }
 }
 
-
 export { RestApiClient }
 export type { ISession }

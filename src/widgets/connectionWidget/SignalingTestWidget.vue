@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { RefSymbol } from '@vue/reactivity';
 import { onMounted, ref } from 'vue';
-import PeerConnection from '@/entities/api/apiWebrtc';
+import WebRtcConnection from '@/entities/api/apiWebrtc';
 
 let localVideoRef = ref<HTMLVideoElement | null>(null); 
 let remoteVideoRef = ref<HTMLVideoElement | null>(null); 
@@ -9,7 +9,7 @@ let cameraRef = ref<HTMLElement|null>(null)
 let micRef = ref<HTMLElement|null>(null)
 
 let localStreamSrc: MediaStream
-let peerConnection: PeerConnection
+let peerConnection: WebRtcConnection
 let remoteStreamSrc: MediaStream
 
 let cameraBtnStyle = ref<any | null>(null)
@@ -17,16 +17,15 @@ let micBtnStyle = ref<any | null>(null)
 
 
 let initStreamAsync = async () => {
-
   //видео контент
   if (localVideoRef.value == null) return
   localStreamSrc = await navigator.mediaDevices.getUserMedia({video: true, audio: true})
   localVideoRef.value.srcObject = localStreamSrc;
 
 
-
-  peerConnection = new PeerConnection()
-  await peerConnection.createPeerConection(localStreamSrc, remoteVideoRef.value!)
+  
+  peerConnection = new WebRtcConnection(localStreamSrc)
+  await peerConnection.createPeerConnection(remoteVideoRef.value!)
 
   await peerConnection.startCall()
 
