@@ -1,5 +1,5 @@
-import SignalR from '@/entities/services/signalr';
-import { RestApiClient, type ISession } from '@/entities/api/apiClient';
+import { SignalingClient } from '../services/webSocket';
+import type { IceCandidateData } from '../models';
 
 
 // Настройки STUN-сервера
@@ -12,50 +12,34 @@ const configuration = {
      }, // STUN-сервер
   ],
   encodedInsertabelStream: true,
-  forceVideoCodec: 'VP8'
 };
 
 // Класс для создания пиир соединения 
 class WebRtcConnection {
   private peerConnection: RTCPeerConnection;
-  private signalR: SignalR;
-  private apiClient: RestApiClient; 
-  private session: ISession | undefined;
+  private signalingClient: SignalingClient;
   private localStream: MediaStream;
 
   // Добавляем очередь для кандидатов
   private pendingCandidates: RTCIceCandidate[] = [];
 
   constructor(localStream: MediaStream, ) {
-    this.apiClient = new RestApiClient('http://26.101.132.34:5154/');
+    this.signalingClient = new SignalingClient("ws://localhost:3000");
     this.peerConnection = new RTCPeerConnection(configuration);
+    
+
     //получаем все треки(аудио видео дорожки) у локального стрима 
+
     this.localStream = localStream;
     this.localStream.getTracks().forEach(track => {
       this.peerConnection.addTrack(track, localStream)
     })
-    
-    this.signalR = new SignalR("http://26.101.132.34:5154/signaling");
+    this.registerSocketHandlers();
   }
 
   //создаем соединение между Peer, устанавливаеи прослушивающие сокеты
   public createPeerConnection = async (remoteVideo: HTMLVideoElement) => {
-    //поменять в будущем 
-    this.session = await this.apiClient.joinToVoiceChannel({
-        id: 1,
-        name: 'floppa',
-        guildId: 1,
-        type: 2
-    })
-    
-    //регистрация сокетов
-    this.registerSocketHandlers(this.session.sessionId);
-
-    //старт signalR 
-    await this.signalR.startingConnection();
-    
-    //регестрируем обработчики
-
+    await this.signalingClient.start()
     // под вопросом, стоит вынести в отдельный метод
     this.peerConnection.ontrack = event =>  {
       console.log("Видео поток пришел")
@@ -67,8 +51,9 @@ class WebRtcConnection {
     this.peerConnection.onconnectionstatechange = this.handleSignalingSateEvent
     this.peerConnection.onicegatheringstatechange = this.handleIceConnectionStateChangeEvent;
   }
+
   private handleIceConnectionStateChangeEvent = (event: Event) => {
-    console.log(event);
+    //console.log(event);
   };
 
   private handleSignalingSateEvent = (event: Event) => {
@@ -78,72 +63,72 @@ class WebRtcConnection {
   private handleICECandidateEvent = (event: RTCPeerConnectionIceEvent) => {
     if(event.candidate) {
       console.log('кандидат полетел без ошибок ')
-      this.signalR?.connection.invoke("Icecandidate", this.session?.sessionId, event.candidate)
+      console.info(event.candidate)
+
+      this.signalingClient.send<any>('ice-candidate', event.candidate)
       //console.log('send icecandidate')
     }
   }
-  
 
-  private registerSocketHandlers = (sessionId: string) => {
-    this.signalR?.connection.on("Offer", async (offerData) => {
+  private registerSocketHandlers = () => {
+    this.signalingClient.on("offer", async (offerData) => {
+      
       console.log('emit offer from another peer')
-      const sessionDesc = new RTCSessionDescription(offerData.offer);
-      console.log(sessionDesc.sdp);
-      await this.peerConnection.setRemoteDescription(offerData.offer);
+      console.log(offerData)
+
+      const remoteDesc = new RTCSessionDescription(offerData.offer);
+      await this.peerConnection.setRemoteDescription(remoteDesc);
       const answer = await this.peerConnection.createAnswer();
       await this.peerConnection.setLocalDescription(answer);
-      this.signalR?.connection.invoke("Answer", this.session?.sessionId, offerData.from, this.peerConnection.localDescription);
+
+      this.signalingClient.send("answer", answer);
+
       console.log('send answer')
     });
     
-    this.signalR?.connection.on("Answer", async (answer) => {
+    this.signalingClient.on("answer", async (answer) => {
       console.log('emit answer from another peer')
-      // set remote description
+      
       await this.peerConnection.setRemoteDescription(answer);
-
+      console.log('Обмен закончен')
       // Применяем отложенные кандидаты
       for (const candidate of this.pendingCandidates) {
+        console.log(candidate)
         await this.peerConnection.addIceCandidate(candidate);
       }
       this.pendingCandidates = [];
-
-      this.signalR?.connection.send("end-call", this.session?.sessionId);
-      
     });
   
-    this.signalR?.connection.on("Icecandidate", async (candidate) => {
+    this.signalingClient.on("ice-candidate", async (candidate) => {
       if (candidate) {
         if (!this.peerConnection.remoteDescription) {
           // Если remoteDescription ещё не установлен — сохраняем в очередь
-          this.pendingCandidates.push(new RTCIceCandidate(candidate));
+          this.pendingCandidates.push(candidate);
+          console.log("сохраняем в очередь")
         } else {
           // Иначе применяем сразу
-          await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+          console.log(candidate)
+          await this.peerConnection.addIceCandidate(candidate);
         }
-      
-
-      // console.log('emit icecandidate from server')
-      // //добавляем себе айс кандидата
-      // if(candidate) {
-      //   await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
-      // }
       }
     })
-    this.signalR?.connection.on("CallEnded", async () => {
+
+    this.signalingClient.on("end-call", async () => {
       this.endCall()
     })
+
   }
 
   public startCall = async () => {
     //заходим в руму 
-    this.signalR?.connection.send("Connect", this.session?.sessionId, {nickname : "Floppa", avatarUrl: null});
+    //this.signalingClient.send("connect", {} );
 
     //Создаем sdp пакет и отправляем его
     const offer = await this.peerConnection.createOffer();
     await this.peerConnection.setLocalDescription(offer);
-    await this.signalR?.connection.invoke("Offer", this.session?.sessionId, this.peerConnection.localDescription);
+
+    await this.signalingClient.send("offer", {offer});
     console.log('send Offer from startCall')
-    
   }
 
   public endCall = async () => {
