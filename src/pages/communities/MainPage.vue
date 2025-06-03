@@ -1,31 +1,56 @@
-<script setup lang="ts">
-</script>
-
 <template>
   <div class="app-container">
     <!-- Боковая панель с сообществами -->
+    <Sidebar></Sidebar>
+    <!-- Бовокая панель с каналами -->
     <aside class="sidebar">
-      <div class="server-list">
-        <div class="server-icon active" title="Home">
+    <div class="server-list">
+      <!-- Активный сервер -->
+      <div class="server-item active">
+        <div class="server-icon">
           <router-link to="/login">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 3L2 12h3v8h14v-8h3L12 3z" />
             </svg>
           </router-link>
         </div>
-        <div class="server-icon" title="Community 1">
-            <span>C1</span>
+        <div class="server-name">Home</div>
+      </div>
+
+      <!-- Другие серверы -->
+      <div class="server-item">
+        <div class="server-icon">
+          <span>C1</span>
         </div>
-        <div class="server-icon" title="Community 2">
+        <div class="server-name">Community 1</div>
+      </div>
+      <div class="server-item">
+        <div class="server-icon">
           <span>C2</span>
         </div>
-        <router-link to="/add">
-          <div class="server-icon" title="Add Server">
-            <span>+</span>
-          </div>
-        </router-link>
+        <div class="server-name">Community 2</div>
       </div>
-    </aside>
+
+      <!-- Кнопка добавления сервера -->
+      <div class="server-item add-server">
+        <div class="server-icon">
+          <router-link to="/add">
+            <span>+</span>
+          </router-link>
+        </div>
+        <div class="server-name">Add Server</div>
+      </div>
+    </div>
+
+    <!-- Профильный виджет -->
+    <div class="profile-widget">
+      <Avatar v-if="avatarInfo" :info="avatarInfo"/>
+      <div class="profile-info">
+        <div class="username">User123</div>
+        <div class="status online"></div>
+      </div>
+    </div>
+  </aside>
 
     <!-- Основная часть приложения -->
     <main class="main-content">
@@ -83,6 +108,23 @@
   </div>
 </template>
 
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { userStore } from '@/entities/store/user'
+import Avatar from '@/features/avatar/Avatar.vue'
+import Sidebar from '@/widgets/communitySidebar/Sidebar.vue'
+import type { AvatarInfo } from '@/features/avatar/model/avatarInfo'
+
+const store = userStore()
+
+const info: AvatarInfo = {
+  avatar: store.currentUser?.avatar || null,
+  name: store.currentUser!.nickname
+}
+
+const avatarInfo = computed<AvatarInfo>(() => info)
+</script>
+
 <style>
 /* Общая структура */
 .app-container {
@@ -94,48 +136,106 @@
 }
 
 /* Боковая панель */
+/* Боковая панель */
 .sidebar {
-  width: 72px;
+  width: 200px;
   background-color: #2f3136;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 10px 0;
+  justify-content: space-between; /* Распределяем элементы по высоте */
+  height: 100vh;
 }
 
 .server-list {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 10px;
+  padding: 10px;
+}
+
+.server-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.server-item:hover,
+.server-item.active {
+  background-color: #3a3d44;
+  border-radius: 6px;
+
 }
 
 .server-icon {
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   background-color: #40444b;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.server-icon:hover,
-.server-icon.active {
-  background-color: #5865f2;
-}
-
-.server-icon svg {
-  width: 24px;
-  height: 24px;
   color: white;
+  font-weight: bold;
+  font-size: 16px;
+  text-decoration: none;
 }
 
 .server-icon span {
-  font-size: 16px;
-  font-weight: bold;
+  color: inherit;
+}
+
+.server-name {
+  color: #ccc;
+  font-size: 14px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.add-server .server-icon {
+  background-color: #5865f2;
   color: white;
+}
+
+/* Профильный виджет */
+.profile-widget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-top: 1px solid #393c41;
+  background-color: #282a2d;
+  margin-top: auto; /* Отодвигает вниз */
+}
+
+.profile-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #5865f2;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.username {
+  color: white;
+  font-size: 14px;
+}
+
+.status {
+  width: 8px;
+  height: 8px;  
+  border-radius: 50%;
+  margin-left: 5px;
+}
+
+.status.online {
+  background-color: #43b581;
 }
 
 /* Основная часть */

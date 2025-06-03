@@ -1,5 +1,5 @@
 import { SignalingClient } from '../services/webSocket';
-import type { IceCandidateData } from '../models';
+import type { IceCandidateData } from '../models/WebRTCModels';
 
 
 // Настройки STUN-сервера
@@ -42,8 +42,8 @@ class WebRtcConnection {
     await this.signalingClient.start()
     // под вопросом, стоит вынести в отдельный метод
     this.peerConnection.ontrack = event =>  {
-      console.log("Видео поток пришел")
-      remoteVideo.srcObject = event.streams[0]
+      const remoteStream = event.streams[0]
+      remoteVideo.srcObject = remoteStream;
     }
 
     //получение ice кандидата
@@ -57,14 +57,14 @@ class WebRtcConnection {
   };
 
   private handleSignalingSateEvent = (event: Event) => {
-    //console.log(event);
+    if (this.peerConnection.iceConnectionState === 'connected') {
+      const stats = this.peerConnection.getStats()
+      //console.log(stats)
+    }
   }
 
   private handleICECandidateEvent = (event: RTCPeerConnectionIceEvent) => {
     if(event.candidate) {
-      console.log('кандидат полетел без ошибок ')
-      console.info(event.candidate)
-
       this.signalingClient.send<any>('ice-candidate', event.candidate)
       //console.log('send icecandidate')
     }
@@ -136,6 +136,7 @@ class WebRtcConnection {
       this.peerConnection.close()
     }
   }
+
 }
 
 export default WebRtcConnection

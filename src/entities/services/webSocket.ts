@@ -1,4 +1,4 @@
-import type { WsMessage, WsEvent } from '../models';
+import type { WsMessage, WsEvent } from '../models/WebRTCModels';
 
 export class SignalingClient {
   private url: string
@@ -52,7 +52,7 @@ export class SignalingClient {
       console.warn('Сокет не открыт:', event);
     }
   }
-
+  
   public close(): void {
     this.socket?.close();
   }

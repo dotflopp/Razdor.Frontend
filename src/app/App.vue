@@ -1,10 +1,27 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { userStore } from '@/entities/store/user';
+import { communityStore } from '@/entities/store/community';
+import AnimatedRouterView from '@/shared/ui/animated-router-view/AnimatedRouterView.vue';
+import { onMounted } from 'vue';
+import router from './router';
+
+const store = userStore()
+const commStore = communityStore()
+onMounted(async () => {
+  try {
+    await store.loadFromLocalStorage()
+  } catch (error) {
+    console.error('Ошибка авторизации:', error)
+    // Редирект на страницу входа
+    router.push('/login')
+    
+  }
+})
 </script>
 
 <template>
   <div id="app">
-    <RouterView />
+    <AnimatedRouterView />
   </div>
 </template>
 

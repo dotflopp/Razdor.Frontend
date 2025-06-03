@@ -17,3 +17,4 @@ export interface AnswerData {
 export interface IceCandidateData {
   candidate: RTCIceCandidateInit;
 }
+

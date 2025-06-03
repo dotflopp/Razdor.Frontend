@@ -1,20 +1,18 @@
-<script setup lang="ts">
-</script>
-
 <template>
   <div class="login">
     <div class="login-card">
       <h2>Welcome back!</h2>
       <p>We're so excited to see you again!</p>
       <!-- Форма входа -->
-      <form class="login-form">
+      <form @submit.prevent="handleSubmit" class="login-form">
         <div class="input-group">
-          <input type="text" placeholder="Enter your email" />
+          <input v-model="email" type="text" placeholder="Enter your email" />
         </div>
         <div class="input-group">
-          <input type="password" placeholder="Enter your password" />
+          <input v-model="password" type="password" placeholder="Enter your password" />
         </div>
         <button type="submit" class="login-button">Login</button>
+        <p v-if="error" class="error-message">{{ error }}</p>
       </form>
       <!-- Дополнительные ссылки -->
       <div class="footer-links">
@@ -24,7 +22,40 @@
   </div>
 </template>
 
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { userStore } from '@/entities/store/user'
+import { RestApiClient } from '@/entities/api/apiClient'
 
+const router = useRouter()
+const uStore = userStore()
+
+const email = ref('')
+const password = ref('')
+const error = ref('')
+
+async function handleSubmit() {
+  try {
+    const api = new RestApiClient('https://dotflopp.ru/api')
+    const { token } = await api.login({
+      email: email.value, 
+      password: password.value
+    })
+
+    // Сохраняем в store
+    uStore.login()
+    uStore.setToken(token)
+
+    // Переход на главную или нужный маршрут
+    router.push('/main')
+  } 
+  catch (err) {
+    console.error(err)
+    error.value = 'Неверный email или пароль'
+  }
+}
+</script>
 
 <style lang="css">
 
