@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { User } from '../models/userModels'
+import type { SelectedStatus, User } from '../models/userModels'
 import { RestApiClient } from '../api/apiClient'
 
 const api = new RestApiClient('https://dotflopp.ru/api') 
@@ -16,8 +16,7 @@ export const userStore = defineStore('user', {
       try {
         this.user = await api.getCurrentUser()
       } catch (error) {
-        console.error('Ошибка получения данных пользователя:', error)
-        this.logout()
+        throw error
       }
     },
     login() {
@@ -31,14 +30,17 @@ export const userStore = defineStore('user', {
       // Сохраняем токен и пользователя в localStorage
       localStorage.setItem('auth_token', token)
     },
+    setStatus(status: SelectedStatus) {
+      this.user!.selectedStatus = status
+    },
     async loadFromLocalStorage() {
       const token = localStorage.getItem('auth_token')
       if (token ) {
         try {
           this.isAuthenticated = true
           this.token = token
-        } catch (e) {
-          console.error('Ошибка загрузки данных из localStorage:', e)
+        } catch (error) {
+          throw error
         }
       }
     }
@@ -46,7 +48,8 @@ export const userStore = defineStore('user', {
   getters: {
     currentUser: (state) => state.user,
     isLoggedIn: (state) => state.isAuthenticated,
-    getToken: (state) => state.token
+    getToken: (state) => state.token,
+    getStatus: (state) => state.user?.status
   }
   
 })

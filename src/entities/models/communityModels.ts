@@ -24,3 +24,19 @@ export interface Invite {
   createdAt: string; // ISO 8601 формат даты и времени
   usesCount: number;
 }
+
+export interface InviteExtended {
+  id: string;
+  creatorId: string;
+  expiresAt: string | null;
+  createdAt: string; // ISO 8601 формат даты и времени
+  usesCount: number;
+  community: InviteCommunity;
+}
+
+export interface InviteCommunity {
+  id: string;
+  name: string;
+  description: string | null;
+  avatar: string | null;
+}

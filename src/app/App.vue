@@ -1,27 +1,28 @@
 <script setup lang="ts">
 import { userStore } from '@/entities/store/user';
 import { communityStore } from '@/entities/store/community';
-import AnimatedRouterView from '@/shared/ui/animated-router-view/AnimatedRouterView.vue';
+import { RouterView } from 'vue-router'
 import { onMounted } from 'vue';
 import router from './router';
 
-const store = userStore()
-const commStore = communityStore()
+
+
 onMounted(async () => {
+  const store = userStore()
+  const commStore = communityStore()
   try {
     await store.loadFromLocalStorage()
   } catch (error) {
-    console.error('Ошибка авторизации:', error)
+    console.error('Ошибка загрузки локальных данных:', error)
     // Редирект на страницу входа
     router.push('/login')
-    
   }
 })
 </script>
 
 <template>
   <div id="app">
-    <AnimatedRouterView />
+    <RouterView />
   </div>
 </template>
 

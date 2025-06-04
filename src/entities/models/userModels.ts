@@ -5,10 +5,12 @@ export interface User {
   nickname: string;
   avatar: string | null; 
   credentialsChangeDate: string; 
-  selectedStatus: 'Online' | 'Invisible' | 'DoNotDisturb'; 
+  selectedStatus: SelectedStatus; 
   status: 'Online' | 'Offline' | 'DoNotDisturb'; 
   description: null | string; 
 }
+
+export type SelectedStatus = 'Online' | 'Invisible' | 'DoNotDisturb'
 
 export interface UserInfo {
   id: string;

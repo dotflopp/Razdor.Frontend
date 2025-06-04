@@ -1,7 +1,7 @@
 <template>
     <!-- Аватар -->
     <div class="avatar-container">
-      <img v-if="info.avatar" :src="info.avatar" alt="User Avatar" class="avatar-image" />
+      <img v-if="avatar" :src="avatar" alt="User Avatar" class="avatar-image" />
       <div v-else class="avatar-initials" :style="{ backgroundColor: avatarColor }">
         {{ initials }}
       </div>
@@ -10,11 +10,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { AvatarInfo } from './model/avatarInfo';
+
 
 // Пользователь из props
 const props = defineProps<{
-  info: AvatarInfo
+  avatar: string,
+  name:string
 }>()
 
 
@@ -50,8 +51,9 @@ function getAvatarColor(name: string): string {
 }
 
 // Вычисляемые свойства
-const initials = computed(() => generateInitials(props.info.name))
-const avatarColor = computed(() => getAvatarColor(props.info.name))
+console.log('name', props.name)
+const initials = computed(() => generateInitials(props.name))
+const avatarColor = computed(() => getAvatarColor(props.name))
 </script>
 
 <style scoped>

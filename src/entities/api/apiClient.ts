@@ -1,6 +1,6 @@
 import type { AuthResponse, LoginRequest, RegisterRequest } from "../models/authModels";
 import type { Channel, ConnectionToken, NewChannel } from "../models/channelModels";
-import type { Community, Invite } from "../models/communityModels";
+import type { Community, Invite, InviteExtended } from "../models/communityModels";
 import type { User, UserInfo } from "../models/userModels";
 import {userStore} from '@/entities/store/user'
 
@@ -71,11 +71,20 @@ export class RestApiClient {
     });
   }
 
-  //Сообщества
+  //Приглашения
   async acceptInvitation(inviteId: string): Promise<void> {
     await this.request<void>('POST',`/invites/${inviteId}`, true );
   }
+  async createInvitation(communityId: string, lifeTime: string): Promise<InviteExtended> {
+    return await this.request<InviteExtended>('POST',`/communities/${communityId}/invites`, true, {
+      body: JSON.stringify({'lifeTime': lifeTime })
+    });
+  } 
+  async getInviteInformation(inviteId: string): Promise<InviteExtended> { 
+    return await this.request<InviteExtended>('GET', `/invites/${inviteId}`, true)
+  } 
 
+  //Сообщества
   async getUserCommunities(): Promise<Community[]> {
     return await this.request<Community[]>('GET',`/communities/@my`, true );
   }
@@ -90,8 +99,8 @@ export class RestApiClient {
     });
   }
 
-  async getCommunityChannel(communityId: string): Promise<Community> {
-    return await this.request<Community>('GET',`communities/${communityId}/channels/${communityId}`, true );
+  async getChannels(communityId: string): Promise<Channel[]> {
+    return await this.request<Channel[]>('GET',`communities/${communityId}/channels/${communityId}`, true );
   }
 
   async createNewChannel(communityId: string, data: NewChannel): Promise<Channel> {
@@ -100,13 +109,9 @@ export class RestApiClient {
     });
   }
 
-  async createInvitation(communityId: string, lifeTime: string): Promise<Invite> {
-    return await this.request<Invite>('POST',`/communities/${communityId}/channels`, true, {
-      body: JSON.stringify({'lifeTime': lifeTime })
-    });
-  } 
-
+  
   async connectionToVoiceChannel(communityId: string, lifeTime: string): Promise<ConnectionToken> {
     return await this.request<ConnectionToken>('POST',`/communities/${communityId}/connect`, true, );
   }
+  
 }

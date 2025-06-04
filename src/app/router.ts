@@ -8,7 +8,9 @@ const signUpPage = () => import('@/pages/auth/SignUpPage.vue')
 const homePage = () => import('@/pages/home')
 const roomPage = () => import('@/pages/testRooms/RoomsPage.vue')
 const mainPage = () => import('@/pages/communities/MainPage.vue')
-const addPage = () => import('@/pages/communities/AddPage.vue')
+const inviteHandlerPage = () => import('@/pages/invite/InviteНandlerPage.vue')
+const acceptInvitationPage = () => import('@/pages/invite/AcceptInvitation.vue')
+
 //прописываем массив свойств роутера
 const routes = [
   { 
@@ -46,19 +48,19 @@ const routes = [
     } 
   },
   { 
-    path: '/add', 
-    component: addPage,
+    path: '/invite/:id', 
+    component: inviteHandlerPage,
     meta: { 
-      auth: true
+      auth: false
     } 
   },
   { 
-    path: '/profile', 
-    component: addPage,
+    path: '/acceptinvite', 
+    component: acceptInvitationPage,
     meta: { 
       auth: true
     } 
-  },
+  }
 ]
 
 //создаем сам роутер
@@ -69,40 +71,34 @@ const router = createRouter({
 
 // Глобальный хук для проверки аутентификации
 router.beforeEach(async (to, from, next) => {
+  //данные для работы роутера 
   const uStore = userStore()
   const commStore = communityStore()
   const isAuthenticated = uStore.isAuthenticated; 
   const isUserLoaded = (uStore.currentUser != null)
   const isCommunityLoaded = (commStore.communities != null)
-  //проверка на аунтефикацию
-  if (to.meta.auth && !isAuthenticated) {
-    next('/login');
-  } 
-  else {
-    next(); 
-  }
 
-  //проверка на загруженного пользователя
-  if(to.meta.needUser && !isUserLoaded) {
+
+  if (to.meta.auth && !isAuthenticated) {
+    return next('/login')
+  }
+  if (to.meta.needUser && !isUserLoaded) {
     try {
       await uStore.fetchCurrentUser()
     } catch (error) {
-      console.error('Ошибка загрузки пользователя:', error)
-      next('/login') // Перенаправляем на логин
+      return next('/login')
     }
-  } else {
-    next()
   }
-  //проверка на загруженные community
-  if(to.meta.needCommunity && !isCommunityLoaded) {
+  if (to.meta.needCommunity && !isCommunityLoaded) {
     try {
       await commStore.fetchCommunities()
     } catch (error) {
-      console.error('Ошибка загрузки сообщества:', error)
+      console.error('Ошибка загрузки сообществ:', error)
     }
-  } else {
-    next()
   }
+
+  // 4. Перейти дальше
+  next()
 });
 
 export default router

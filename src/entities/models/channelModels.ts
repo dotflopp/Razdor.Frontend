@@ -2,7 +2,7 @@
 export interface Channel {
   id: string; 
   communityId: string; 
-  type: string;
+  type: "TextChannel" | "ForkChannel" | "VoiceChannel" | "CategoryChannel";
   parentId: string; 
   name: string;
   isSyncing: boolean;
@@ -20,7 +20,7 @@ export interface PermissionOverwrite {
 
 export interface NewChannel{
   name: string,
-  type: string,
+  type:"TextChannel" | "ForkChannel" | "VoiceChannel" | "CategoryChannel";
   parentId: string;
 }
 
