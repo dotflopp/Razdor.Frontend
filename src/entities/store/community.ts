@@ -8,20 +8,35 @@ const api = new RestApiClient('https://dotflopp.ru/api')
 export const communityStore = defineStore('community', {
   state: () => ({
     communities: null as Community[] | null,
-    activeCommunityId: null as string | null,
+    activeCommunityId: localStorage.getItem('activeCommunity')  || null,
     channels: null as Channel[] | null,
     activeChannelId: null as string | null,
-    pendingInviteId: null as string | null
+    pendingInviteId: null as string | null,
+    invite: null as InviteExtended | null,
   }),
   actions: {
     setActiveCommunity(id: string) {
       this.activeCommunityId = id
+      localStorage.setItem('activeCommunity', id)
+    },
+    async loadActiveCommunity() {
+      const id = localStorage.getItem('activeCommunity')
+      if(this.communities!.length == 0 || id == null ) return
+      this.communities!.forEach((community) => {
+        if(community.id == id) {
+          this.activeCommunityId = id
+          return
+        } 
+      })
     },
     setActiveChannel(id: string) {
-      this.activeCommunityId = id
+      this.activeCommunityId = id 
     },
     setPendingInvite(id: string) {
       this.pendingInviteId = id
+    },
+    setInvite(invite: InviteExtended) {
+      this.invite = invite
     },
     addCommunity(community: Community) {
       this.communities?.push(community)
@@ -35,9 +50,11 @@ export const communityStore = defineStore('community', {
     async fetchCommunities() {
       try {
         this.communities = await api.getUserCommunities()
+        await this.loadActiveCommunity()
       } catch (error) {
         console.error('Ошибка получения сообществ', error)
       }
+
     },
     async fetchChannels() {
       try {
@@ -55,13 +72,16 @@ export const communityStore = defineStore('community', {
         console.error('Ошибка при принятии инвайта:', error)
       }
     },
-    async getInviteInfo(inviteId: string): Promise<InviteExtended> {
-      return await api.getInviteInformation(inviteId)
+    async fetchInviteInfo(inviteId: string): Promise<void> {
+      this.invite = await api.getInviteInformation(inviteId)
+      console.log(this.invite)
     } 
   },
   getters: {
     allCommunities: (state) => state.communities,
     communityById: (state) => (id: string) => state.communities?.find(c => c.id === id) || null,
     getactiveCommunityId : (state) => state.activeCommunityId,
+    getInviteID: state => state.pendingInviteId,
+    getInvite: state => state.invite
   }
 })

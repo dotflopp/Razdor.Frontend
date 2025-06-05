@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { userStore } from '@/entities/store/user'
 import { RestApiClient } from '@/entities/api/apiClient'
@@ -35,6 +35,11 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 
+onMounted(async () => {
+  if(uStore.getToken != null) {
+    router.push('/main')
+  }
+}) 
 async function handleSubmit() {
   try {
     const api = new RestApiClient('https://dotflopp.ru/api')

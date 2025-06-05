@@ -1,120 +1,108 @@
 <template>
-  <div class="user-card">
-    <!-- Аватар -->
+  <div class="user-profile-top">
+    <!-- Верхняя часть (Аватар + Имена) -->
+    <div class="user-info-top">
+      <AvatarWithStatus 
+        :avatar="user.avatar!" 
+        :name="user.identityName" 
+        :status="user.selectedStatus"
+      />
+      <div class="user-names">
+        <h2>{{ user.nickname }} @{{ user.identityName }}</h2>
+        <!-- Статус -->
+        <div class="status-section">
+          <select v-model="selectedStatus" @change="updateUserStatus()" class="status-select">
+            <option value="Online">Online</option>
+            <option value="DoNotDisturb">Don't disturb</option>
+            <option value="Invisible">Invisible</option>
+          </select>
+        </div>
+      </div>
+      
+    </div>
+    
 
-    <!-- Основная информация -->
+    <!-- Нижняя часть (Дополнительная информация) -->
     <div class="user-info">
-      <div class="username">{{ nickname }}</div>
-      <div class="user-tag">@{{ tag }}</div>
-      <div class="user-status"> {{ statusMessage }}</div>
+      <p><strong>Last change:</strong> {{ formattedTime(user.credentialsChangeDate) }}</p>
+      <p><strong>Email:</strong> {{ user.email }}</p>
+      <p v-if="user.description"><strong>About</strong> {{ user.description }}</p>
     </div>
-
-    <!-- Дополнительная информация -->
-    <div class="additional-info">
-      <div><strong>Город:</strong> {{ city }}</div>
-      <div><strong>Дата регистрации:</strong> {{ formattedDate }}</div>
-      <div><strong>Статус:</strong> {{ bio }}</div>
-    </div>
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import Avatar from '@/features/avatar/Avatar.vue'
+import { ref, computed } from 'vue'
+import { userStore } from '@/entities/store/user';
+import AvatarWithStatus from '../avatar/AvatarWithStatus.vue';
+import { formattedTime } from '@/shared/utils/formatedTime';
 
-// Пример данных пользователя
-const nickname = 'User123'
-const tag = '1234'
-const city = 'Москва'
-const bio = 'Люблю программирование и кофе'
-const registrationDate = new Date('2020-05-15')
+const uStore = userStore()
+const user = computed(() => (uStore.currentUser!))
 
-// Форматируем дату
-const formattedDate = computed(() => {
-  return registrationDate.toLocaleDateString('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-})
+const selectedStatus = ref(uStore.currentUser!.selectedStatus)
 
-// Статусы
-type UserStatus = 'Online' | 'Invisible' | 'DoNotDisturb'
-const selectedStatus = ref<UserStatus>('Online')
-
-const statusMessage = computed(() => {
-  switch (selectedStatus.value) {
-    case 'Online':
-      return 'В сети'
-    case 'DoNotDisturb':
-      return 'Не беспокоить'
-    case 'Invisible':
-      return 'Оффлайн'
+function updateUserStatus() {
+  if (selectedStatus.value) {
+    uStore.setStatus(selectedStatus.value)
   }
-})
-
-
+}
 </script>
 
+
 <style scoped>
-.user-card {
+.user-profile-top {
+  padding: 10px;
   display: flex;
-  align-items: start;
+  flex-direction: column;
   gap: 20px;
-  padding: 20px;
-  background-color: #2f3136;
-  border-radius: 10px;
-  position: relative;
 }
 
-
-
-.user-info {
-  flex: 1;
+.user-info-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.user-names {
   display: flex;
   flex-direction: column;
 }
-
-.username {
-  font-size: 18px;
+.user-names h2 {
+  
+  margin: 0;
+  font-size: 16px;
   color: white;
   font-weight: bold;
 }
 
-.user-tag {
+.user-names p {
+  margin: 4px 0 0 0;
   font-size: 14px;
-  color: #72767d;
-  margin-top: 4px;
 }
 
-.user-status {
-  font-size: 14px;
-  color: #72767d;
-  margin-top: 4px;
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.additional-info {
-  flex: 1;
+.user-info p {
   font-size: 14px;
-  color: #a9a9a9;
-  line-height: 1.5;
+  color: #d9d6d6;
+  word-wrap: break-word;
+}
+.status-section {
+  align-items: center;
 }
 
-.settings-button {
-  background: none;
+.status-select {
   border: none;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
+  background-color: #46484e;
+  color: white;
+  font-size: 14px;
 }
-
-.settings-button:hover {
-  background-color: #3a3d41;
-}
-
-.settings-button svg {
-  color: #72767d;
+.status-select:focus {
+  outline: none;
+  box-shadow: none;
 }
 </style>

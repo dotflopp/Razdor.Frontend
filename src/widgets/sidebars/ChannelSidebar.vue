@@ -81,7 +81,7 @@ async function createInvitation() {
 
     const url = `http://localhost:5173/invite/${newInvitationId.id}`;
     await navigator.clipboard.writeText(url)
-    message.value = 'Приглашение скопировано в буффер обмена '
+    message.value = 'Invitation copied to clipboard'
   } catch (error) {
     console.error('Ошибка при создании приглашения:', error)
     message.value = 'Не удалось создать приглашение.'
@@ -217,7 +217,7 @@ sidebar-content {
 
 .current-communities {
   background-color: #282a2d;
-  padding: 8px 12px;
+  padding: 18px 12px;
 }
 
 .community-card {

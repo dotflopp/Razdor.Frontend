@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { userStore } from '@/entities/store/user';
-import { communityStore } from '@/entities/store/community';
 import { RouterView } from 'vue-router'
 import { onMounted } from 'vue';
 import router from './router';
@@ -9,7 +8,6 @@ import router from './router';
 
 onMounted(async () => {
   const store = userStore()
-  const commStore = communityStore()
   try {
     await store.loadFromLocalStorage()
   } catch (error) {

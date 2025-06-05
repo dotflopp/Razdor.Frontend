@@ -22,7 +22,7 @@
       </svg>
     </button>
     <!-- Настройки -->
-    <ModalWindow :show="showModal" title="User Profile" @close="showModal = false">
+    <ModalWindow :show="showModal" title="User Environment" @close="showModal = false">
       <UserProfile></UserProfile>  
     </ModalWindow>
 
@@ -33,7 +33,7 @@
 import { computed, ref } from 'vue'
 import { userStore } from '@/entities/store/user'
 import ModalWindow from '@/features/modalWindow/ModalWindow.vue'
-import UserProfile from './UserProfile.vue'
+import UserProfile from './UserView.vue'
 import AvatarWithStatus from '../avatar/AvatarWithStatus.vue'
 
 const store = userStore()

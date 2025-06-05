@@ -40,7 +40,12 @@ export class RestApiClient {
       const errorText = await response.text();
       throw new Error(errorText || 'API Error');
     }
-    return await response.json();
+    const contentType = response.headers.get('content-type');
+
+    if (contentType?.includes('application/json')) {
+      return await response.json();
+    } 
+    return {} as T;
   }
 
   //аунтефикация
@@ -66,7 +71,7 @@ export class RestApiClient {
   }
 
   async setUserStatus(status: string): Promise<void> {
-    await this.request<UserInfo>('PUT',`/users/@me/status`, true, {
+    await this.request<void>('PUT',`/users/@me/status`, true, {
       body: JSON.stringify({'status': status})
     });
   }

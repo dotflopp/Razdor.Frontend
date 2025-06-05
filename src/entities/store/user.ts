@@ -24,14 +24,17 @@ export const userStore = defineStore('user', {
     },
     logout() {
       this.isAuthenticated = false
+      this.token = null 
+      localStorage.clear()
     },
     setToken(token: string) {
       this.token = token
       // Сохраняем токен и пользователя в localStorage
       localStorage.setItem('auth_token', token)
     },
-    setStatus(status: SelectedStatus) {
+    async setStatus(status: SelectedStatus) {
       this.user!.selectedStatus = status
+      await api.setUserStatus(status)
     },
     async loadFromLocalStorage() {
       const token = localStorage.getItem('auth_token')
@@ -43,7 +46,10 @@ export const userStore = defineStore('user', {
           throw error
         }
       }
-    }
+    },
+    async getUserWithId(id: string) {
+      return api.getUserWithId(id)
+    },
   },
   getters: {
     currentUser: (state) => state.user,

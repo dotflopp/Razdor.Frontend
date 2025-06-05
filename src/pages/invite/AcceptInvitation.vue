@@ -1,109 +1,92 @@
 <template>
   <div class="accept-invite-page">
-    <!-- Лоадер -->
-    <div v-if="loading" class="loader-container">
-      <svg class="loader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M12 2v20" />
-      </svg>
-      <p>Загрузка информации...</p>
-    </div>
-
     <!-- Информация о сообществе -->
-    <div v-else-if="invite" class="invite-card">
-      <!-- Аватар сообщества -->
-      <Avatar :avatar="invite.community.avatar!" :name="invite.community.name!"></Avatar>
-      <h2>{{ invite.community.name }}</h2>
-      <p v-if="invite.community.description">{{ invite.community.description }}</p>
-
+    <div v-if="invite" class="invite-card">
+      <div class="community-info">
+        <div class="community-avatar">
+          <Avatar :avatar="invite.community.avatar!" :name="invite.community.name!"></Avatar>
+        </div>
+        <div class="community-text">
+          <h2>{{ invite.community.name }}</h2>
+          <p v-if="invite.community.description">{{ invite.community.description }}</p>
+        </div>
+      </div>
+    
       <div class="info-row">
-        <span>Создатель:</span>
-        <span>{{ invite.creatorId }}</span>
+        <span>Creator</span>
+        <span>{{ user?.nickname }}</span>
       </div>
 
       <div class="info-row">
-        <span>Создано:</span>
+        <span>Created</span>
         <span>{{ formattedCreatedAt }}</span>
       </div>
 
       <div class="info-row">
-        <span>Использований:</span>
+        <span>Expires</span>
+        <span>{{ formattedExpiresAt }}</span>
+      </div>
+
+      <div class="info-row">
+        <span>Uses count</span>
         <span>{{ invite.usesCount }}</span>
       </div>
 
-      <button @click="acceptInvite">Вступить в сообщество</button>
+      <button @click="acceptInvite">Join the community</button>
     </div>
 
     <!-- Ошибка -->
     <div v-else class="error-message">
-      Не удалось загрузить информацию о приглашении.
+      Failed to load invitation information 
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { communityStore } from '@/entities/store/community'
 import { userStore } from '@/entities/store/user'
 import type { InviteExtended } from '@/entities/models/communityModels'
+import type { UserInfo } from '@/entities/models/userModels'
 import Avatar from '@/features/avatar/Avatar.vue'
+import { formattedTime } from '@/shared/utils/formatedTime'
 
 const router = useRouter()
-const route = useRoute()
 const commStore = communityStore()
 const uStore = userStore()
 
-const loading = ref(true)
 const error = ref(false)
-const invite = ref<InviteExtended | null>(null)
+const invite = ref<InviteExtended | null> ()
+const user = ref<UserInfo | null> (null) 
+
+// Форматируем дату
+const formattedCreatedAt = computed(() => {return formattedTime(invite.value!.createdAt!)})
+const formattedExpiresAt = computed(() => {return formattedTime(invite.value!.expiresAt!)})
 
 // Загружаем данные
 onMounted(async () => {
   const pendingInviteId = commStore.pendingInviteId
-
+  console.log(pendingInviteId)
   if (!pendingInviteId) {
     error.value = true
-    loading.value = false
     return
   }
-
   try {
-    const fetchedInvite = await getInviteInformation(pendingInviteId)
-    invite.value = fetchedInvite
-  } catch (err) {
-    console.error('Ошибка получения данных приглашения:', err)
+    await commStore.fetchInviteInfo(pendingInviteId)
+    invite.value = commStore.getInvite
+    console.log(invite.value)
+    user.value = await uStore.getUserWithId(invite.value?.creatorId!)
+  } 
+  catch (err) {
     error.value = true
-  } finally {
-    loading.value = false
-  }
+  } 
 })
-
-// Форматируем дату
-const formattedCreatedAt = computed(() => {
-  if (!invite.value?.createdAt) return ''
-  const date = new Date(invite.value.createdAt)
-  return date.toLocaleDateString('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-})
-
-// Пример функции получения данных — замени на свою реализацию
-async function getInviteInformation(inviteId: string): Promise<InviteExtended> {
-  // Здесь должна быть твоя логика API-запроса
-  return commStore.getInviteInfo(inviteId)
-}
 
 // Обработка принятия инвайта
 async function acceptInvite() {
-  if (!invite.value) return
-
   try {
-    await commStore.acceptInvite(invite.value.id)
+    await commStore.acceptInvite(invite.value!.id)
     router.push('/main') // или любая другая страница после успешного вступления
   } catch (err) {
     alert('Не удалось принять приглашение')
@@ -121,56 +104,52 @@ async function acceptInvite() {
   background-color: #2f3136;
   padding: 20px;
 }
-
-.loader-container {
-  text-align: center;
-  color: white;
+.community-info {
+  height: 40px;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  margin-bottom: 20px;
 }
-
-.loader {
+.community-avatar {
   width: 40px;
   height: 40px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
 }
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.community-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .invite-card {
   background-color: #36393f;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 24px;
-  max-width: 400px;
+  min-width: 400px;
   text-align: left;
-  color: white;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
 }
 
-.community-avatar {
-  display: flex;
-  justify-content: center;
+.invite-card h2 {
+  font-size: 20px;
+  margin: 8px 0 8px 0;
+}
+
+.invite-card p {
+  font-size: 14px;
   margin-bottom: 16px;
-}
-
-.community-avatar img {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
 }
 
 .info-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
   font-size: 14px;
-  color: #a9a9a9;
+  margin-bottom: 8px;
 }
 
 button {
+  width: 100%;
   background-color: #5865f2;
   color: white;
   border: none;
@@ -179,6 +158,7 @@ button {
   cursor: pointer;
   font-size: 14px;
   transition: background-color 0.2s ease;
+  margin-top: 16px;
 }
 
 button:hover {
@@ -186,7 +166,6 @@ button:hover {
 }
 
 .error-message {
-  color: red;
   font-size: 16px;
   text-align: center;
 }

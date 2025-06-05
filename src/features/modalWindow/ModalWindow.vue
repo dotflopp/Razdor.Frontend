@@ -51,8 +51,7 @@ function closeModal() {
   background-color: #36393f;
   padding: 24px;
   border-radius: 8px;
-  max-width: 500px;
-  width: 40%;
+  min-width: 30%;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
   color: white;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -87,10 +86,6 @@ function closeModal() {
 
 .close-btn:hover {
   color: #fff;
-}
-
-.modal-body {
-  padding-top: 10px;
 }
 
 /* Анимация fade */

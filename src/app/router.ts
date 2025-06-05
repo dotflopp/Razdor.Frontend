@@ -15,7 +15,7 @@ const acceptInvitationPage = () => import('@/pages/invite/AcceptInvitation.vue')
 const routes = [
   { 
     path: '', 
-    component: homePage
+    redirect: '/main'
   },
   { 
     path: '/login', 
@@ -44,7 +44,8 @@ const routes = [
     meta: { 
       auth: true,
       needUser: true,
-      needCommunity: true
+      needCommunity: true,
+      needInviteRedirect:true
     } 
   },
   { 
@@ -58,7 +59,7 @@ const routes = [
     path: '/acceptinvite', 
     component: acceptInvitationPage,
     meta: { 
-      auth: true
+      auth: true,
     } 
   }
 ]
@@ -78,6 +79,9 @@ router.beforeEach(async (to, from, next) => {
   const isUserLoaded = (uStore.currentUser != null)
   const isCommunityLoaded = (commStore.communities != null)
 
+  if(to.meta.needInviteRedirect && commStore.getInviteID != null) {
+    return next('/acceptinvite')
+  } 
 
   if (to.meta.auth && !isAuthenticated) {
     return next('/login')
@@ -94,6 +98,13 @@ router.beforeEach(async (to, from, next) => {
       await commStore.fetchCommunities()
     } catch (error) {
       console.error('Ошибка загрузки сообществ:', error)
+    }
+  }
+  if (to.meta.needInviteInfo) {
+    try {
+      await commStore.fetchInviteInfo(commStore.getInviteID!)
+    } catch (error) {
+      console.error('Ошибка получения данных приглашения:', error)
     }
   }
 
