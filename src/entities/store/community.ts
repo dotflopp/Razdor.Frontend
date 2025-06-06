@@ -10,6 +10,7 @@ export const communityStore = defineStore('community', {
     communities: null as Community[] | null,
     activeCommunityId: localStorage.getItem('activeCommunity')  || null,
     channels: null as Channel[] | null,
+    channelsLevelsMap: null as Map<number, Channel> | null,
     activeChannelId: null as string | null,
     pendingInviteId: null as string | null,
     invite: null as InviteExtended | null,
@@ -18,19 +19,22 @@ export const communityStore = defineStore('community', {
     setActiveCommunity(id: string) {
       this.activeCommunityId = id
       localStorage.setItem('activeCommunity', id)
+      this.fetchChannels()
     },
     async loadActiveCommunity() {
       const id = localStorage.getItem('activeCommunity')
+      
       if(this.communities!.length == 0 || id == null ) return
       this.communities!.forEach((community) => {
         if(community.id == id) {
           this.activeCommunityId = id
+          this.fetchChannels()
           return
         } 
       })
     },
     setActiveChannel(id: string) {
-      this.activeCommunityId = id 
+      this.activeChannelId = id 
     },
     setPendingInvite(id: string) {
       this.pendingInviteId = id
@@ -75,7 +79,8 @@ export const communityStore = defineStore('community', {
     async fetchInviteInfo(inviteId: string): Promise<void> {
       this.invite = await api.getInviteInformation(inviteId)
       console.log(this.invite)
-    } 
+    },
+     
   },
   getters: {
     allCommunities: (state) => state.communities,

@@ -1,8 +1,9 @@
+export type ChannelType = "TextChannel" | "ForkChannel" | "VoiceChannel" | "CategoryChannel"
 
 export interface Channel {
   id: string; 
   communityId: string; 
-  type: "TextChannel" | "ForkChannel" | "VoiceChannel" | "CategoryChannel";
+  type: ChannelType;
   parentId: string; 
   name: string;
   isSyncing: boolean;
@@ -20,13 +21,14 @@ export interface PermissionOverwrite {
 
 export interface NewChannel{
   name: string,
-  type:"TextChannel" | "ForkChannel" | "VoiceChannel" | "CategoryChannel";
+  type: ChannelType;
   parentId: string;
 }
 
 export interface ConnectionToken {
   token: string;
 }
+
 
 
 

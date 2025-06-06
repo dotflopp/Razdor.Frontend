@@ -25,6 +25,7 @@ export const userStore = defineStore('user', {
     logout() {
       this.isAuthenticated = false
       this.token = null 
+      this.user = null
       localStorage.clear()
     },
     setToken(token: string) {

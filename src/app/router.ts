@@ -77,7 +77,7 @@ router.beforeEach(async (to, from, next) => {
   const commStore = communityStore()
   const isAuthenticated = uStore.isAuthenticated; 
   const isUserLoaded = (uStore.currentUser != null)
-  const isCommunityLoaded = (commStore.communities != null)
+  //const isCommunityLoaded = (commStore.communities != null)
 
   if(to.meta.needInviteRedirect && commStore.getInviteID != null) {
     return next('/acceptinvite')
@@ -93,7 +93,7 @@ router.beforeEach(async (to, from, next) => {
       return next('/login')
     }
   }
-  if (to.meta.needCommunity && !isCommunityLoaded) {
+  if (to.meta.needCommunity) {
     try {
       await commStore.fetchCommunities()
     } catch (error) {

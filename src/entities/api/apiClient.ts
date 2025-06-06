@@ -104,8 +104,9 @@ export class RestApiClient {
     });
   }
 
+  //Каналы
   async getChannels(communityId: string): Promise<Channel[]> {
-    return await this.request<Channel[]>('GET',`communities/${communityId}/channels/${communityId}`, true );
+    return await this.request<Channel[]>('GET',`/communities/${communityId}/channels`, true, {});
   }
 
   async createNewChannel(communityId: string, data: NewChannel): Promise<Channel> {
@@ -114,9 +115,8 @@ export class RestApiClient {
     });
   }
 
-  
+  //Соединение
   async connectionToVoiceChannel(communityId: string, lifeTime: string): Promise<ConnectionToken> {
-    return await this.request<ConnectionToken>('POST',`/communities/${communityId}/connect`, true, );
+    return await this.request<ConnectionToken>('POST',`/communities/${communityId}/connect`, true);
   }
-  
 }

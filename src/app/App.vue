@@ -30,7 +30,10 @@ onMounted(async () => {
   padding: 0;
   box-sizing: border-box;
 }
-
+#button {
+  background-color: transparent !important;
+  border:none !important;
+}
 #app {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   height: 100vh;

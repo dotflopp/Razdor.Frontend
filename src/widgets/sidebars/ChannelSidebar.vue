@@ -26,19 +26,43 @@
           v-for="channel in channels" :key="channel.id"
           class="channel-item" :class="{ active: channel.id === activeChannelId }"
           @click="setActiveChannel(channel.id)"
-        >
-          <span class="channel-name">{{ channel.name }}</span>
+        > 
+          <div class="channel">
+            <div class="channel-name">{{ channel.name }}</div>
+            <button class="addChannel-btn-simple" @click = "showModalChannel = true, setCurrentChannel(channel.id)">
+              <CreateIcon :fillColor="'white'" :size="'100%'"></CreateIcon>
+            </button>
+          </div>
+          
         </li>
       </ul>
 
       <!-- Кнопка добавления канала -->
       <div class="add-channel-button">
-        <button class="add-btn" @click="showModal = true">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z" />
-          </svg>
+        <button class="addChannel-btn" @click="showModalChannel = true">
+          <p>create channel</p>
         </button>
       </div>
+      <ModalWindow :show="showModalChannel" title="Create channel" @close="showModalChannel = false">
+          <form @submit.prevent="createChannel" class="invitation-form">
+            <!-- channelName-->
+            <input id="channelName" v-model="channelName" type="text" placeholder="channel name" required />
+            <div class="channel-type">
+              <p>Channel type</p>
+              <div class="status-section">
+                <select v-model="channelType" class="channeltype-select">
+                  <option value="TextChannel">TextChannel</option>
+                  <option value="ForkChannel">ForkChannel</option>
+                  <option value="VoiceChannel">VoiceChannel</option>
+                  <option value="CategoryChannel">CategoryChannel</option>
+                </select>
+              </div>
+            </div>
+            <p v-if="messageChannel" class="message">{{ messageChannel }}</p>
+            <!-- Кнопка отправки -->
+            <button type="submit" class="create-button">Create Channel</button>
+          </form>
+        </ModalWindow>
     </div>
   </div>
 </template>
@@ -50,6 +74,8 @@ import ModalWindow from '@/features/modalWindow/ModalWindow.vue'
 
 import { RestApiClient } from '@/entities/api/apiClient'
 import PersonIcon from '@/shared/svg/PersonIcon.vue'
+import type { ChannelType, NewChannel } from '@/entities/models/channelModels'
+import CreateIcon from '@/shared/svg/CreateIcon.vue'
 
 const api = new RestApiClient('https://dotflopp.ru/api') 
 const commStore = communityStore()
@@ -58,7 +84,13 @@ const showModal = ref(false)
 const lifetime = ref('')
 const message = ref('')
 
+const showModalChannel = ref(false)
+const channelName = ref('')
+const channelType = ref<ChannelType>('TextChannel')
+const messageChannel = ref('')
+
 const activeCommunityId = computed(() => commStore.activeCommunityId)
+const currentChannel = ref('0')
 // Текущее сообщество (по ID)
 const currentCommunity = computed(() => {
   if (!activeCommunityId.value) return null
@@ -77,9 +109,7 @@ async function createInvitation() {
 
   try {
     const newInvitationId = await api.createInvitation(commStore.getactiveCommunityId! ,lifetime.value)
-    //const params = new URLSearchParams({id: newInvitationId});
-
-    const url = `http://localhost:5173/invite/${newInvitationId.id}`;
+    const url = `https://dotflopp.ru/invite/${newInvitationId.id}`;
     await navigator.clipboard.writeText(url)
     message.value = 'Invitation copied to clipboard'
   } catch (error) {
@@ -88,25 +118,31 @@ async function createInvitation() {
   }
 }
 
-// async function createChannel() {
-//   if (!name.value.trim()) return
-
-//   try {
-//     const newChannelData = NewChannel()
-//     const newChannel = await api.createNewChannel(commStore.activeCommunityId!, name.value)
-//     channelStore.addChannel(newChannel)
-//     successMessage.value = 'Канал успешно создан!'
-//   } catch (error) {
-//     console.error('Ошибка при создании канала:', error)
-//     successMessage.value = 'Не удалось создать канал.'
-//   }
-// }
+async function createChannel() {
+  if (!channelName.value.trim() || channelType.value.length == 0) return
+  try {
+    const newChannel: NewChannel = {
+      name: channelName.value,
+      type: channelType.value,
+      parentId: currentChannel.value
+    }
+    const createdChannel = await api.createNewChannel(activeCommunityId.value!, newChannel)
+    console.log(createdChannel)
+    commStore.addChannel(createdChannel)
+    messageChannel.value = 'Канал успешно создан!'
+    currentChannel.value = '0'
+  } catch (error) {
+    console.error('Ошибка при создании канала:', error)
+    messageChannel.value = 'Не удалось создать канал.'
+  }
+}
+function setCurrentChannel(channelId: string) {
+  currentChannel.value = channelId;
+}
 
 </script>
-
-
 <style scoped>
-sidebar-content {
+.sidebar-content {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -118,8 +154,12 @@ sidebar-content {
   height: 100%;
   display:flex;
   flex-direction: column;
-  width: 200px;
+  width:100%;
   border-bottom: 1px solid #444;
+}
+
+.channel-type {
+  display:flex;
 }
 
 .channel-list {
@@ -131,16 +171,15 @@ sidebar-content {
 
 .channel-item {
   display: flex;
-  justify-content: center;
-  align-items: center;
   cursor: pointer;
-  padding: 8px 0;
+  padding: 4px 8px;
   transition: background-color 0.2s ease;
 }
 
 .channel-item:hover,
 .channel-item.active {
-  background-color: #2f3136;
+  background-color: #36393f;
+  color:white
 }
 
 .channel-name {
@@ -148,16 +187,10 @@ sidebar-content {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
-  color: white;
+  color: rgb(220, 220, 220);
   font-size: 14px;
 }
 
-.add-channel-button {
-  display: flex;
-  height: 40px;
-  margin-top: 10px;
-  justify-content: center;
-}
 
 .add-btn {
   height: 100%;
@@ -282,6 +315,34 @@ sidebar-content {
   cursor: pointer;
   font-size: 14px;
   transition: background-color 0.2s ease;
+}
+.channel {
+  width:100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  color: rgb(217, 209, 209);
+}
+.channel-item:hover .addChannel-btn-simple {
+  opacity: 1;
+  pointer-events: auto;
+}
+.addChannel-btn-simple {
+  background-color: transparent;
+  border: none;
+  height: 20px;
+  width: 20px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  
+}
+.addChannel-btn {
+  padding: 4px 8px;
+  background-color: transparent;
+  border: none;
+  color: white;
+  
 }
 
 </style>
