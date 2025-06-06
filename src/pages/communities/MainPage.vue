@@ -17,23 +17,19 @@
       <MainPageHeader></MainPageHeader>
       <Chat></Chat>
     </main>
+    <div class="community-member">
+      <MembersSidebar></MembersSidebar>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { userStore } from '@/entities/store/user'
 import ProfileCard from '@/features/profile/ProfileCard.vue'
 import CommunitySidebar from '@/widgets/sidebars/CommunitySidebar.vue'
 import ChannelSidebar from '@/widgets/sidebars/ChannelSidebar.vue'
 import MainPageHeader from '@/widgets/header.vue/MainPageHeader.vue'
 import Chat from '@/widgets/chat/Chat.vue'
-
-const store = userStore()
-
-
-const avatar= computed<string>(() => store.currentUser!.avatar!)
-const name= computed<string>(() => store.currentUser!.nickname)
+import MembersSidebar from '@/widgets/sidebars/MembersSidebar.vue'
 
 </script>
 

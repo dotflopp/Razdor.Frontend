@@ -37,11 +37,13 @@ const selectedStatus = computed<string>(() => props.status!)
 .avatar-container {
   position: relative;
   display: inline-block;
+  width: 100%;
+  height: 100%;
 }
 
 .profile-avatar {
-  width: 40px;
-  height: 40px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   overflow: hidden;
   object-fit: cover;

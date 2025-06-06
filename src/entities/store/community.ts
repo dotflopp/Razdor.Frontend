@@ -2,6 +2,9 @@ import { defineStore } from 'pinia'
 import { RestApiClient } from '../api/apiClient'
 import type { Community, InviteExtended } from '../models/communityModels'
 import type { Channel } from '../models/channelModels'
+import type { User, UserInCommunity } from '../models/userModels'
+import { messageStore } from './messages'
+
 
 const api = new RestApiClient('https://dotflopp.ru/api') 
 
@@ -11,15 +14,20 @@ export const communityStore = defineStore('community', {
     activeCommunityId: localStorage.getItem('activeCommunity')  || null,
     channels: null as Channel[] | null,
     channelsLevelsMap: null as Map<number, Channel> | null,
-    activeChannelId: null as string | null,
+    activeChannelId: localStorage.getItem('activeChannel') as string | null,
     pendingInviteId: null as string | null,
     invite: null as InviteExtended | null,
+    communityMembers: null as UserInCommunity[] | null
   }),
   actions: {
+    setCommunityMember(communityMembers: UserInCommunity[]) {
+      this.communityMembers = communityMembers
+    },
     setActiveCommunity(id: string) {
       this.activeCommunityId = id
       localStorage.setItem('activeCommunity', id)
       this.fetchChannels()
+      this.fetchCommunityMembers()
     },
     async loadActiveCommunity() {
       const id = localStorage.getItem('activeCommunity')
@@ -34,7 +42,10 @@ export const communityStore = defineStore('community', {
       })
     },
     setActiveChannel(id: string) {
-      this.activeChannelId = id 
+      const mStore = messageStore()
+      this.activeChannelId = id
+      localStorage.setItem('activeChannel', id) 
+      mStore.fetchMessages(this.activeChannelId)
     },
     setPendingInvite(id: string) {
       this.pendingInviteId = id
@@ -54,6 +65,7 @@ export const communityStore = defineStore('community', {
     async fetchCommunities() {
       try {
         this.communities = await api.getUserCommunities()
+        await this.fetchCommunityMembers()
         await this.loadActiveCommunity()
       } catch (error) {
         console.error('Ошибка получения сообществ', error)
@@ -65,6 +77,14 @@ export const communityStore = defineStore('community', {
         this.channels = await api.getChannels(this.activeCommunityId!)
       } catch (error) {
         console.error('Ошибка получения каналов', error)
+      }
+    },
+    async fetchCommunityMembers() {
+      try {
+        this.communityMembers = await api.getCommunityMembers(this.activeCommunityId!, '0', '100')
+      } 
+      catch (error) {
+        console.log('Ошибка запроса членов сообщества', error)
       }
     },
     async acceptInvite(id: string): Promise<void> {
@@ -79,13 +99,13 @@ export const communityStore = defineStore('community', {
     async fetchInviteInfo(inviteId: string): Promise<void> {
       this.invite = await api.getInviteInformation(inviteId)
       console.log(this.invite)
-    },
-     
+    }
   },
   getters: {
     allCommunities: (state) => state.communities,
     communityById: (state) => (id: string) => state.communities?.find(c => c.id === id) || null,
     getactiveCommunityId : (state) => state.activeCommunityId,
+    getCommunityMembers: state => state.communityMembers,
     getInviteID: state => state.pendingInviteId,
     getInvite: state => state.invite
   }

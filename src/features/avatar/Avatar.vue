@@ -1,7 +1,7 @@
 <template>
     <!-- Аватар -->
     <div class="avatar-container">
-      <img v-if="avatar" :src="avatar" alt="User Avatar" class="avatar-image" />
+      <img v-if="avatar" :src="'https://dotflopp.ru'+ avatar" class="avatar-image" />
       <div v-else class="avatar-initials" :style="{ backgroundColor: avatarColor }">
         {{ initials }}
       </div>
@@ -60,8 +60,8 @@ const avatarColor = computed(() => getAvatarColor(props.name))
 
 
 .avatar-container {
-  width: 40px;
-  height: 40px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   overflow: hidden;
   display: flex;

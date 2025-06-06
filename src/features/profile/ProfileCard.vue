@@ -1,7 +1,9 @@
 <template>
   <div class="profile-widget">
-    <AvatarWithStatus :avatar="avatar" :name="name" :status = "status">
+    <div class="avatar">
+      <AvatarWithStatus :avatar="avatar" :name="name" :status = "status">
     </AvatarWithStatus>
+    </div>
     <!-- Информация о пользователе -->
     <div class="profile-info">
       <div class="username">{{ name }}</div>
@@ -47,10 +49,15 @@ const showModal = ref(false)
 </script>
 
 <style scoped>
+.avatar {
+  width: 40px;
+  height: 40px;
+}
 .profile-widget {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 60px;
   gap: 15px;
   padding: 8px 16px;
   background-color: #282a2d;

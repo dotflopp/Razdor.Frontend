@@ -2,11 +2,9 @@
   <div class="user-profile-top">
     <!-- Верхняя часть (Аватар + Имена) -->
     <div class="user-info-top">
-      <AvatarWithStatus 
-        :avatar="user.avatar!" 
-        :name="user.identityName" 
-        :status="user.selectedStatus"
-      />
+      <div class="avatar">
+        <AvatarWithStatus :avatar="user.avatar!" :name="user.identityName" :status="user.selectedStatus"/>
+      </div>
       <div class="user-names">
         <h2>{{ user.nickname }} @{{ user.identityName }}</h2>
         <!-- Статус -->
@@ -48,9 +46,12 @@ function updateUserStatus() {
   }
 }
 </script>
-
-
 <style scoped>
+
+.avatar {
+  height: 50px;
+  width: 50px;
+}
 .user-profile-top {
   padding: 10px;
   display: flex;

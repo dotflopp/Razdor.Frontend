@@ -1,16 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { userStore } from '@/entities/store/user'
 import { communityStore } from '@/entities/store/community'
+import { inject } from 'vue'
+import type SignalRClient from '@/entities/services/signalr'
 
 //инициализируем точки перехода 
 const loginPage = () => import('@/pages/auth/LoginPage.vue')
 const signUpPage = () => import('@/pages/auth/SignUpPage.vue')
-const homePage = () => import('@/pages/home')
 const roomPage = () => import('@/pages/testRooms/RoomsPage.vue')
 const mainPage = () => import('@/pages/communities/MainPage.vue')
 const inviteHandlerPage = () => import('@/pages/invite/InviteНandlerPage.vue')
 const acceptInvitationPage = () => import('@/pages/invite/AcceptInvitation.vue')
-
+const fileTestWidget = () => import('@/features/filesenderTest/FileSenderTest.vue')
 //прописываем массив свойств роутера
 const routes = [
   { 
@@ -61,6 +62,14 @@ const routes = [
     meta: { 
       auth: true,
     } 
+  },
+  { 
+    path: '/testFile', 
+    component: fileTestWidget,
+    meta: { 
+      auth: true,
+      needUser: true,
+    } 
   }
 ]
 
@@ -77,6 +86,7 @@ router.beforeEach(async (to, from, next) => {
   const commStore = communityStore()
   const isAuthenticated = uStore.isAuthenticated; 
   const isUserLoaded = (uStore.currentUser != null)
+  const commGateway = inject<SignalRClient>('CGW')!
   //const isCommunityLoaded = (commStore.communities != null)
 
   if(to.meta.needInviteRedirect && commStore.getInviteID != null) {
@@ -89,6 +99,7 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.needUser && !isUserLoaded) {
     try {
       await uStore.fetchCurrentUser()
+      await commGateway.startingConnection(uStore.getToken!)
     } catch (error) {
       return next('/login')
     }

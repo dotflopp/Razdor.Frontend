@@ -155,7 +155,6 @@ function setCurrentChannel(channelId: string) {
   display:flex;
   flex-direction: column;
   width:100%;
-  border-bottom: 1px solid #444;
 }
 
 .channel-type {
