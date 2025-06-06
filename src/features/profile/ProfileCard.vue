@@ -57,7 +57,8 @@ const showModal = ref(false)
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
+  flex-shrink: 0;
+  height: 50px;
   gap: 15px;
   padding: 8px 16px;
   background-color: #282a2d;

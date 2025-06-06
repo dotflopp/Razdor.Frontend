@@ -19,7 +19,8 @@
 
 <style scoped>
 .top-bar {
-  height: 56px;
+  flex-shrink: 0;
+  height: 50px;
   background-color: #2f3136;
   display: flex;
   align-items: center;

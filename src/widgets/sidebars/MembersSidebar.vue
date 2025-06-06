@@ -33,8 +33,9 @@ const commMembers = computed(() => commStore.getCommunityMembers)
 
 <style scoped>
 .top-bar {
+  flex-shrink: 0;
   background-color:#282a2d;
-  height: 56px;
+  height: 50px;
 }
 .sidebar-users {
   background-color: #2f3136;

@@ -12,12 +12,24 @@
         <div class="message-body">
           {{ message.text }}
         </div>
+        
       </div>
     </div>
   </section>
 
   <!-- Поле ввода сообщения -->
   <footer class="message-input">
+    <div class="clipicon-wrapper" @click="triggerFileInput()" :disabled="!selectedFile">
+      <ClipIcon :fill-color="'white'" :size="'55%'" class="clipicon"></ClipIcon>
+    </div>
+    <!-- Скрытый инпут для выбора файлов -->
+    <input 
+      type="file" 
+      accept="image/*, .pdf, .txt" 
+      @change="onFileSelected"
+      ref="fileInput"
+      hidden
+    />
     <input 
       type="text" 
       placeholder="Type a message..." 
@@ -35,15 +47,18 @@ import { useRoute } from 'vue-router' // Если ты используешь vu
 import { formattedTime } from '@/shared/utils/formatedTime'
 import { userStore } from '@/entities/store/user'
 import { communityStore } from '@/entities/store/community'
-import { RefSymbol } from '@vue/reactivity'
 import type { User, UserInfo } from '@/entities/models/userModels'
 import type SignalRClient from '@/entities/services/signalr'
 import type { Message } from '@/entities/models/chatModels'
+import ClipIcon from '@/shared/svg/СlipIcon.vue'
+
 
 const mStore = messageStore()
 const commStore = communityStore()
 const uStore = userStore()
 
+const selectedFile = ref<File | null>(null)
+const fileInput = ref()
 const route = useRoute()
 
 const channelId = computed(() => commStore.activeChannelId)
@@ -87,9 +102,22 @@ function scrollToBottom() {
     chatContainer.value.scrollTop = chatContainer.value.scrollHeight
   }
 }
+function triggerFileInput() {
+  if (fileInput.value) {
+    fileInput.value.click()
+  }
+}
 
 async function getUser(userId: string): Promise<UserInfo> {
   return await uStore.getUserWithId(userId)
+}
+// Обработчик выбора файла
+function onFileSelected(event: Event) {
+  console.log('кликаю')
+  const input = event.target as HTMLInputElement
+  if (input.files && input.files.length > 0) {
+    selectedFile.value = input.files[0]
+  }
 }
 </script>
 
@@ -143,14 +171,29 @@ async function getUser(userId: string): Promise<UserInfo> {
   padding: 10px;
   border-radius: 5px;
 }
-
+.clipicon {
+  transform: rotate(225deg);
+  opacity: 0.5;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+.clipicon:hover {
+  transform: rotate(225deg);
+  opacity: 1;
+}
+.clipicon-wrapper {
+  height: 50px;
+  width: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 /* Поле ввода сообщения */
 .message-input {
-  height: 60px;
+  height: 50px;
+  flex-shrink: 0;
   background-color: #2f3136;
   display: flex;
   align-items: center;
-  padding: 0 20px;
 }
 
 .message-input input {
@@ -182,7 +225,6 @@ async function getUser(userId: string): Promise<UserInfo> {
 }
 
 .chat-area::-webkit-scrollbar-track {
-  background: #2f3136;
   border-radius: 4px;
 }
 

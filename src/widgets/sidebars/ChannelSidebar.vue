@@ -248,8 +248,12 @@ function setCurrentChannel(channelId: string) {
 }
 
 .current-communities {
+  flex-shrink: 0;
+  display: flex;
+  height: 50px;
   background-color: #282a2d;
-  padding: 18px 12px;
+  padding: 8px 16px;
+  justify-content: center;
 }
 
 .community-card {
