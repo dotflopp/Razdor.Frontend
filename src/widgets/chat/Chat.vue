@@ -139,7 +139,7 @@ function onFileSelected(event: Event) {
 
 .message {
   display: flex;
-  padding: 10px ;
+  padding: 19px 0px;
   gap: 15px;
   border-top:1px solid #4d4f53 ;
 }
