@@ -43,7 +43,10 @@
     </div>
 
     <!-- Поле ввода сообщения -->
-    <footer class="message-input">
+    <footer class="message-input" 
+        @paste="onPaste"
+        @dragover.prevent
+        @drop="onDrop">
       <div class="clipicon-wrapper" @click="triggerFileInput()">
         <ClipIcon :fill-color="'white'" :size="'55%'" class="clipicon"></ClipIcon>
       </div>
@@ -54,6 +57,7 @@
         @change="onFileSelected"
         ref="fileInput"
         hidden
+        multiple
       />
       <!-- чатикс -->
       <input 
@@ -104,7 +108,29 @@ async function waitMessage(message: Message) {
   await nextTick()
   scrollToBottom()
 }
+function onPaste(event: ClipboardEvent) {
+  const items = event.clipboardData?.items
+  if (!items) return
 
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]
+    if (item.type.indexOf('image') !== -1 || item.type === 'text/plain' || item.type === 'application/pdf') {
+      const file = item.getAsFile()
+      if (file) {
+        selectedFiles.value.push(file)
+      }
+    }
+  }
+}
+
+function onDrop(event: DragEvent) {
+  event.preventDefault()
+
+  if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+    const files = Array.from(event.dataTransfer.files)
+    selectedFiles.value.push(...files)
+  }
+}
 // Загрузка сообщений при монтировании
 onMounted(async () => {
   await mStore.fetchMessages(channelId.value!)
@@ -239,8 +265,11 @@ function handleDelete(index: number) {
   background-color: #2f3136;
   display: flex;
   align-items: center;
+  transition: background-color 0.3s ease;
 }
-
+.message-input.drag-over {
+  background-color: #3a3d43;
+}
 .message-input input {
   flex-grow: 1;
   padding: 10px;
