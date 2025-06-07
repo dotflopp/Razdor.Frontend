@@ -28,6 +28,7 @@ export const communityStore = defineStore('community', {
       localStorage.setItem('activeCommunity', id)
       this.fetchChannels()
       this.fetchCommunityMembers()
+      this.setActiveChannel(null)
     },
     async loadActiveCommunity() {
       const id = localStorage.getItem('activeCommunity')
@@ -41,11 +42,16 @@ export const communityStore = defineStore('community', {
         } 
       })
     },
-    setActiveChannel(id: string) {
+    setActiveChannel(id: string | null) {
       const mStore = messageStore()
       this.activeChannelId = id
-      localStorage.setItem('activeChannel', id) 
-      mStore.fetchMessages(this.activeChannelId)
+      if(id != null) {
+        localStorage.setItem('activeChannel', id) 
+        mStore.fetchMessages(this.activeChannelId!)
+      }
+      else {
+        mStore.messages = []
+      }
     },
     setPendingInvite(id: string) {
       this.pendingInviteId = id

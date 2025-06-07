@@ -7,7 +7,7 @@
         @click="setActiveCommunity(community.id)"
       >
         <div class="community-avatar">
-          <Avatar v-if="!community.avatar" :name= "community.name" :avatar = "community.avatar!"/>
+          <Avatar :name= "community.name" :avatar = "community.avatar!"/>
         </div>
       </li>
     </ul>
