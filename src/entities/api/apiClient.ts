@@ -155,9 +155,44 @@ export class RestApiClient {
     });
   }
   // /api/attachments/57052311402315776/57135294398332928/57135294440275968
-  async getFileAttachment(url: string): Promise<any> {
-    return await this.request<any>('GET', url.slice(3), true);
+  async getFileAttachment(url: string): Promise<File> {
+  const user = userStore()
+  const fullUrl = `https://dotflopp.ru${url}?access-token=${user.token}`;
+  const response = await fetch(fullUrl, {
+    method: 'GET'
+  });
+
+  if (!response.ok) {
+    throw new Error('Не удалось загрузить файл');
   }
+
+  // Получаем содержимое файла
+  const blob = await response.blob();
+
+  // Получаем имя файла из Content-Disposition
+  const disposition = response.headers.get('Content-Disposition');
+  let filename = 'unknown-file';
+
+  if (disposition && disposition.indexOf('filename=') !== -1) {
+    const matches = /filename="?([^"]+)"?;?/g.exec(disposition);
+    if (matches != null && matches[1]) {
+      filename = matches[1];
+    }
+  }
+
+  // Удаляем расширение, если оно дублируется в filename*
+  // Это можно убрать, если тебе нужна только первая часть
+  const encodedMatches = /filename\*=UTF-8''([\w.%-]+)/g.exec(disposition || '');
+  if (encodedMatches && encodedMatches[1]) {
+    try {
+      filename = decodeURIComponent(encodedMatches[1]);
+    } catch {
+      // fallback to original filename
+    }
+  }
+
+  return new File([blob], filename, { type: blob.type });
+}
 
   //Соединение
   async connectionToVoiceChannel(communityId: string, lifeTime: string): Promise<ConnectionToken> {

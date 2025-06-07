@@ -1,9 +1,9 @@
 <template>
   <div class="file-preview-container" :class="{ 'is-vertical': isVertical }">
-    <div v-for="(attachment, index) in files" :key="attachment.id" class="file-item">
+    <div v-for="(file, index) in filePreviews" :key="file.id" class="file-item">
       <!-- Если это изображение -->
-      <div v-if="isImage(attachment)" class="image-wrapper">
-        <img :src="'https://dotflopp.ru'+ attachment.sourceUrl" class="image-preview" />
+      <div v-if="isImage(file)" class="image-wrapper">
+        <img :src="file.previewUrl!" class="image-preview" />
       </div>
 
       <!-- Если это не изображение -->
@@ -11,7 +11,14 @@
         <span class="icon">📄</span>
       </div>
 
-      <div class="filename">{{ attachment.id || 'Файл' }}</div>
+      <div class="filename">{{ file.name }}</div>
+      <button class="download-button" @click="onDownload(index)">
+          <Download class="download-icon":fill-color="'white'" :size="'60%'"></Download>
+      </button>
+      <!-- <PhotoWindow
+        :show=""
+      >
+      </PhotoWindow> -->
     </div>
   </div>
 </template>
@@ -19,28 +26,72 @@
 <script setup lang="ts">
 import type { Attachment } from '@/entities/models/chatModels'
 import { RestApiClient } from '@/entities/api/apiClient'
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import Download from '@/shared/svg/Download.vue';
+import PhotoWindow from '../modalWindow/PhotoWindow.vue';
 
-onMounted(async ()=>{
+const api = new RestApiClient('https://dotflopp.ru/api') 
 
-  const file = await api.getFileAttachment('api/attachments/57052311402315776/57135294398332928/57135294440275968')
-  
-  console.log(file)
-})
-
-const api = new RestApiClient('https://dotflopp.ru/api')
 const props = defineProps<{
   files: Attachment[]
   direction: 'horizontal' | 'vertical'
 }>()
 
-
 const isVertical = computed(() => props.direction === 'vertical')
+
+const filePreviews = computed(() => {
+  return props.files.map((attachment, index) => {
+    const file = downloadedFiles.value[index]
+    return {
+      ...attachment,
+      previewUrl: file ? URL.createObjectURL(file) : null,
+      name: file ? file.name : attachment.id
+    }
+  })
+})
 
 function isImage(attachment: Attachment): boolean {
   return attachment.mediaType.startsWith('image/')
 }
 
+const downloadedFiles = ref<File[]>([])
+
+function onDownload(index: number) {
+  const file = downloadedFiles.value[index];
+  if (!file) return;
+
+  // Создаём временный <a> элемент для скачивания
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(file);
+  link.download = file.name;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+onMounted(async () => {
+  if (!props.files || props.files.length === 0) return
+
+  const filePromises = props.files.map(attachment =>
+    api.getFileAttachment(attachment.sourceUrl)
+  )
+
+  try {
+    const files = await Promise.all(filePromises)
+    downloadedFiles.value = files
+  } catch (error) {
+    console.error('Ошибка загрузки файлов:', error)
+  }
+})
+
+onUnmounted(() => {
+  // Очистка временных URL
+  if (downloadedFiles.value.length > 0) {
+    for (const file of downloadedFiles.value) {
+      URL.revokeObjectURL(file as unknown as string)
+    }
+  }
+})
 </script>
 
 <style scoped>
@@ -49,7 +100,6 @@ function isImage(attachment: Attachment): boolean {
   gap: 10px;
   max-width: 80%;
   word-break: break-word;
-  padding: 5px 10px;
   border-radius: 10px;
   align-self: center;
   flex-wrap: wrap;
@@ -66,6 +116,10 @@ function isImage(attachment: Attachment): boolean {
   align-items: center;
   text-align: center;
   gap: 4px;
+}
+.file-item:hover .download-button {
+  opacity: 1;
+  visibility: visible;
 }
 
 .image-wrapper {
@@ -113,6 +167,26 @@ function isImage(attachment: Attachment): boolean {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100px;
+}
+.download-button {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  border: none;
+  border-radius: 4px;
+  background-color: #33363a;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s ease-in;
+  opacity: 0;
+}
+
+.download-button:hover .download-icon{
+  opacity: 1 !important;
 }
 
 </style>

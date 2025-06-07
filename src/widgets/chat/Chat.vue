@@ -18,12 +18,15 @@
         <div class="message-body">
           {{ message.text }}
         </div>
-        <MessageFilePreview
-          v-if="message.attachments?.length! > 0"
-          :files="message.attachments!"
-          :direction="'vertical'"
-          :need-close-button="false">
-        </MessageFilePreview>
+        <div class="files">
+          <MessageFilePreview
+            v-if="message.attachments?.length! > 0"
+            :files="message.attachments!"
+            :direction="'vertical'"
+            :need-close-button="false">
+          </MessageFilePreview>
+        </div>
+        
       </div>
     </div>
   </section>
@@ -59,7 +62,6 @@
         v-model="newMessageText"
         @keydown.enter.prevent="sendMessage"
       />
-
       <button class="send-button" @click="sendMessage">Send</button>
     </footer>
   </div>
@@ -67,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, inject, onUnmounted } from 'vue'
+import { ref, computed, onMounted, inject, onUnmounted, nextTick } from 'vue'
 import { messageStore } from '@/entities/store/messages'
 import { formattedTimeForChat } from '@/shared/utils/formatedTime'
 import { communityStore } from '@/entities/store/community'
@@ -97,8 +99,9 @@ const newMessageText = ref('')
 const user = ref()
 // Gateway
 const commGateway = inject<SignalRClient>('CGW')!
-function waitMessage(message: Message) {
+async function waitMessage(message: Message) {
   mStore.addMessage(message)
+  await nextTick()
   scrollToBottom()
 }
 
@@ -114,7 +117,6 @@ onUnmounted(() => {
 
 // Отправка сообщения
 async function sendMessage() {
-  if (!newMessageText.value.trim()) return
   try {  
     await mStore.sendMessage(channelId.value!, newMessageText.value, selectedFiles.value)
     newMessageText.value = ''
@@ -185,12 +187,16 @@ function handleDelete(index: number) {
 }
 .message-content {
   max-width: 80%;
+  max-height: 40%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: start;
 }
 
 .message-header {
   display: flex;
   align-items: center;
-  margin-bottom: 5px;
 }
 
 .username {
@@ -205,6 +211,10 @@ function handleDelete(index: number) {
 .message-body {
   padding: 0px;
   color: #b9bbbe;
+}
+.files {
+  width: 100%;
+  display: flex;
 }
 .clipicon {
   transform: rotate(225deg);
