@@ -22,9 +22,7 @@ export const messageStore = defineStore('messages', {
         console.error('Ошибка загрузки сообщений:', error)
       }
       const uStore = userStore()
-      console.log(this.messages)
       const userIds = this.messages.map(m => m.userId)
-      console.log(userIds)
       if (userIds.length === 0) return
 
       const userPromises = userIds.map(async id => {
@@ -43,8 +41,8 @@ export const messageStore = defineStore('messages', {
     addMessage(message: Message) {
       this.messages.push(message)
     },
-    async sendMessage(channelId: string, data: string) {
-      return await fileApi.sendMessage(channelId, data)
+    async sendMessage(channelId: string, data: string, files?: File[] ) {
+      return await fileApi.sendMessage(channelId, data, files)
     },
     setUserInfo(id: string, userInfo: UserInfo) {
       this.users[id] = userInfo

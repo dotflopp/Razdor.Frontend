@@ -38,12 +38,14 @@ export interface EmbedFooter {
   title: string | null;
   timestamp: string | null; // ISO-8601
 }
+
 export interface Attachment {
   id: string;
   sourceUrl: string;
   mediaType: string;
   size: number;
 }
+
 export interface MentionedUser {
   userId: string;
 }

@@ -18,55 +18,72 @@
         <div class="message-body">
           {{ message.text }}
         </div>
-        
+        <MessageFilePreview
+          v-if="message.attachments?.length! > 0"
+          :files="message.attachments!"
+          :direction="'vertical'"
+          :need-close-button="false">
+        </MessageFilePreview>
       </div>
     </div>
   </section>
 
-  <!-- Поле ввода сообщения -->
-  <footer class="message-input">
-    <div class="clipicon-wrapper" @click="triggerFileInput()" :disabled="!selectedFile">
-      <ClipIcon :fill-color="'white'" :size="'55%'" class="clipicon"></ClipIcon>
+  <div class="message-container">
+    <div class="file-preview">
+      <FilePreview 
+        v-if="selectedFiles?.length > 0"
+        :files="selectedFiles!"
+        :direction="'horizontal'"
+        :need-close-button="true"
+        @delete="handleDelete"
+      />
     </div>
-    <!-- Скрытый инпут для выбора файлов -->
-    <input 
-      type="file" 
-      accept="image/*, .pdf, .txt" 
-      @change="onFileSelected"
-      ref="fileInput"
-      hidden
-    />
-    <input 
-      type="text" 
-      placeholder="Type a message..." 
-      v-model="newMessageText"
-      @keydown.enter.prevent="sendMessage"
-    />
-    <button class="send-button" @click="sendMessage">Send</button>
-  </footer>
+
+    <!-- Поле ввода сообщения -->
+    <footer class="message-input">
+      <div class="clipicon-wrapper" @click="triggerFileInput()">
+        <ClipIcon :fill-color="'white'" :size="'55%'" class="clipicon"></ClipIcon>
+      </div>
+      <!-- Скрытый инпут для выбора файлов -->
+      <input 
+        type="file" 
+        accept="image/*, .pdf, .txt" 
+        @change="onFileSelected"
+        ref="fileInput"
+        hidden
+      />
+      <!-- чатикс -->
+      <input 
+        type="text" 
+        placeholder="Type a message..." 
+        v-model="newMessageText"
+        @keydown.enter.prevent="sendMessage"
+      />
+
+      <button class="send-button" @click="sendMessage">Send</button>
+    </footer>
+  </div>
+  
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, inject, onUnmounted } from 'vue'
 import { messageStore } from '@/entities/store/messages'
-import { useRoute } from 'vue-router' // Если ты используешь vue-router
 import { formattedTimeForChat } from '@/shared/utils/formatedTime'
-import { userStore } from '@/entities/store/user'
 import { communityStore } from '@/entities/store/community'
-import type { User, UserInfo } from '@/entities/models/userModels'
 import type SignalRClient from '@/entities/services/signalr'
 import type { Message } from '@/entities/models/chatModels'
 import ClipIcon from '@/shared/svg/СlipIcon.vue'
 import Avatar from '@/features/avatar/Avatar.vue'
+import FilePreview from '@/features/file/FilePreview.vue'
+import MessageFilePreview from '@/features/file/MessageFilePreview.vue'
 
 
 const mStore = messageStore()
 const commStore = communityStore()
-const uStore = userStore()
 
-const selectedFile = ref<File | null>(null)
+const selectedFiles = ref<File[]>([])
 const fileInput = ref()
-const route = useRoute()
 
 const channelId = computed(() => commStore.activeChannelId)
 // Сообщения текущего канала
@@ -86,8 +103,9 @@ function waitMessage(message: Message) {
 }
 
 // Загрузка сообщений при монтировании
-onMounted(() => {
-  mStore.fetchMessages(channelId.value!)
+onMounted(async () => {
+  await mStore.fetchMessages(channelId.value!)
+  scrollToBottom()
   commGateway.on("MessageCreated", waitMessage)
 })
 onUnmounted(() => {
@@ -97,9 +115,10 @@ onUnmounted(() => {
 // Отправка сообщения
 async function sendMessage() {
   if (!newMessageText.value.trim()) return
-  try {
-    await mStore.sendMessage(channelId.value!, newMessageText.value)
+  try {  
+    await mStore.sendMessage(channelId.value!, newMessageText.value, selectedFiles.value)
     newMessageText.value = ''
+    selectedFiles.value = []
   } catch (error) {
     console.error('Ошибка отправки сообщения:', error)
   }
@@ -107,7 +126,10 @@ async function sendMessage() {
 // Скроллим к последнему сообщению
 function scrollToBottom() {
   if (chatContainer.value) {
-    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+    chatContainer.value.scrollTo({
+      top: chatContainer.value.scrollHeight,
+      behavior: 'smooth'
+    })
   }
 }
 function triggerFileInput() {
@@ -115,17 +137,16 @@ function triggerFileInput() {
     fileInput.value.click()
   }
 }
-
-async function getUser(userId: string): Promise<UserInfo> {
-  return await uStore.getUserWithId(userId)
-}
 // Обработчик выбора файла
 function onFileSelected(event: Event) {
   console.log('кликаю')
   const input = event.target as HTMLInputElement
   if (input.files && input.files.length > 0) {
-    selectedFile.value = input.files[0]
+    selectedFiles.value = [...selectedFiles.value, ...Array.from(input.files)]
   }
+}
+function handleDelete(index: number) {
+  selectedFiles.value.splice(index, 1)
 }
 </script>
 
@@ -136,7 +157,18 @@ function onFileSelected(event: Event) {
   overflow-y: auto;
   background-color: #36393f;
 }
-
+.message-container {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 100%;
+}
+.file-preview {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  background-color: #33363a;
+}
 .message {
   display: flex;
   padding: 19px 0px;

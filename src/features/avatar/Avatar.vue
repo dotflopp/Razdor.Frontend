@@ -51,7 +51,6 @@ function getAvatarColor(name: string): string {
 }
 
 // Вычисляемые свойства
-console.log('name', props.name)
 const initials = computed(() => generateInitials(props.name))
 const avatarColor = computed(() => getAvatarColor(props.name))
 </script>

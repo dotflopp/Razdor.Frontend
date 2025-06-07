@@ -154,6 +154,11 @@ export class RestApiClient {
       }
     });
   }
+  // /api/attachments/57052311402315776/57135294398332928/57135294440275968
+  async getFileAttachment(url: string): Promise<any> {
+    return await this.request<any>('GET', url.slice(3), true);
+  }
+
   //Соединение
   async connectionToVoiceChannel(communityId: string, lifeTime: string): Promise<ConnectionToken> {
     return await this.request<ConnectionToken>('POST',`/communities/${communityId}/connect`, true);
