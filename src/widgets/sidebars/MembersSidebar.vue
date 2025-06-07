@@ -68,8 +68,8 @@ const commMembers = computed(() => commStore.getCommunityMembers)
 }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
+  width: 35px;
+  height: 35px;
 }
 
 .user-name {

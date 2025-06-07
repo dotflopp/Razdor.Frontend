@@ -52,7 +52,6 @@
               <div class="status-section">
                 <select v-model="channelType" class="channeltype-select">
                   <option value="TextChannel">TextChannel</option>
-                  <option value="ForkChannel">ForkChannel</option>
                   <option value="VoiceChannel">VoiceChannel</option>
                   <option value="CategoryChannel">CategoryChannel</option>
                 </select>

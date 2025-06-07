@@ -15,21 +15,20 @@ export class FileApiClient {
     }
   }
 
-  async request<T>( method: string, endpoint: string, needToken: boolean, files?: File[] | null, data?: Record<string, any>, options?: RequestInit): Promise<T> {
+  async request<T>( method: string, endpoint: string, needToken: boolean, files?: File[] | null, data?: Record<string, any>): Promise<T> {
     const url = `${this.connectionUrl}${endpoint}`;
     const formData = new FormData();
+    // Добавляем дополнительные данные
+    if (data) {
+      for (const key in data) {
+        formData.append(key, data[key]);
+      }
+    }
 
     // Добавляем файлы
     if (files && files.length > 0) {
       for (let i = 0; i < files.length; i++) {
         formData.append(`file`, files[i]); 
-      }
-    }
-
-    // Добавляем дополнительные данные
-    if (data) {
-      for (const key in data) {
-        formData.append(key, data[key]);
       }
     }
 
@@ -42,7 +41,6 @@ export class FileApiClient {
     }
 
     const request: RequestInit = {
-      ...options,
       method,
       body: formData, 
       headers: {

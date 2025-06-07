@@ -37,6 +37,7 @@ const error = ref('')
 
 onMounted(async () => {
   if(uStore.getToken != null) {
+    console.log('перенаправляю')
     router.push('/main')
   }
 }) 

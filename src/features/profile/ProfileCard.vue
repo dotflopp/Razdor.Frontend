@@ -50,8 +50,8 @@ const showModal = ref(false)
 
 <style scoped>
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
 }
 .profile-widget {
   display: flex;
@@ -68,15 +68,11 @@ const showModal = ref(false)
 .avatar-container {
   position: relative;
   display: inline-block;
+  width: 35px;
+  height: 35px;
 }
 
-.profile-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  overflow: hidden;
-  object-fit: cover;
-}
+
 
 /* Статус-индикатор */
 .status-dot {

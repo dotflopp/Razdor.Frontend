@@ -4,10 +4,16 @@
     <div 
       v-for="message in messages" :key="message.id" class="message" 
     >
+      <div class="message-avatars">
+        <Avatar 
+          :name = "users[message.userId]!.nickname"
+          :avatar = "users[message.userId]!.avatar!">
+        </Avatar>
+      </div>
       <div class="message-content">
         <div class="message-header">
-          <!-- <span class="username">{{ (await getUser(message.userId)).nickname }}</span> -->
-          <span class="timestamp">{{ formattedTime(message.createdAt) }}</span>
+          <span class="username">{{ users[message.userId]?.nickname }}</span>
+          <span class="timestamp">{{ formattedTimeForChat(message.createdAt) }}</span>
         </div>
         <div class="message-body">
           {{ message.text }}
@@ -44,13 +50,14 @@
 import { ref, computed, onMounted, inject, onUnmounted } from 'vue'
 import { messageStore } from '@/entities/store/messages'
 import { useRoute } from 'vue-router' // Если ты используешь vue-router
-import { formattedTime } from '@/shared/utils/formatedTime'
+import { formattedTimeForChat } from '@/shared/utils/formatedTime'
 import { userStore } from '@/entities/store/user'
 import { communityStore } from '@/entities/store/community'
 import type { User, UserInfo } from '@/entities/models/userModels'
 import type SignalRClient from '@/entities/services/signalr'
 import type { Message } from '@/entities/models/chatModels'
 import ClipIcon from '@/shared/svg/СlipIcon.vue'
+import Avatar from '@/features/avatar/Avatar.vue'
 
 
 const mStore = messageStore()
@@ -64,6 +71,8 @@ const route = useRoute()
 const channelId = computed(() => commStore.activeChannelId)
 // Сообщения текущего канала
 const messages = computed(() => mStore.getMessages)
+const users = computed(() => mStore.getUsers)
+
 const chatContainer = ref<HTMLElement | null>(null)
 
 // Новое сообщение
@@ -79,7 +88,6 @@ function waitMessage(message: Message) {
 // Загрузка сообщений при монтировании
 onMounted(() => {
   mStore.fetchMessages(channelId.value!)
-  
   commGateway.on("MessageCreated", waitMessage)
 })
 onUnmounted(() => {
@@ -131,21 +139,18 @@ function onFileSelected(event: Event) {
 
 .message {
   display: flex;
-  margin-bottom: 20px;
+  padding: 10px ;
+  gap: 15px;
+  border-top:1px solid #4d4f53 ;
+}
+.message:first-child {
+  border-top:none;
 }
 
-.avatar {
-  width: 40px;
-  height: 40px;
-  background-color: #5865f2;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  margin-right: 10px;
+.message-avatars {
+  width: 43px;
+  height: 43px;
 }
-
 .message-content {
   max-width: 80%;
 }
@@ -157,7 +162,6 @@ function onFileSelected(event: Event) {
 }
 
 .username {
-  font-weight: bold;
   margin-right: 10px;
 }
 
@@ -167,9 +171,8 @@ function onFileSelected(event: Event) {
 }
 
 .message-body {
-  background-color: #40444b;
-  padding: 10px;
-  border-radius: 5px;
+  padding: 0px;
+  color: #b9bbbe;
 }
 .clipicon {
   transform: rotate(225deg);
