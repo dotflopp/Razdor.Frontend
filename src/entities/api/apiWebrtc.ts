@@ -82,6 +82,7 @@ export class WebRtcClient {
     this.signalingClient.on("offer", async ({ from, data }) => {
       console.log('offer emit')
       const userId = from
+      console.log(userId)
       let pc = this.peerConnections.get(userId);
       if (!pc) {
         pc = new RTCPeerConnection(configuration);

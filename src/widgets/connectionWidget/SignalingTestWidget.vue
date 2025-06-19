@@ -1,9 +1,14 @@
 <template>
   <!-- контейнер с видео -->
+
   <div class="videos">
-    <video ref="localVideoRef" class="video-player smallFrame"  autoplay playsinline></video>
-    <video ref="remoteVideoRef" class="video-player "  autoplay playsinline></video>
+    <!-- Локальное видео -->
+    <video ref="localVideoRef" class="video-player smallFrame" autoplay playsinline></video>
+    
+    <!-- Здесь будут появляться видео других пользователей -->
+    <div id="remote-videos-container"></div>
   </div>
+
 
   <!-- контроллеры -->
   <div id="controls">
@@ -67,7 +72,7 @@ async function initStreamAsync() {
   localStreamSrc = await navigator.mediaDevices.getUserMedia({video: true, audio: true})
   localVideoRef.value.srcObject = localStreamSrc;
   
-  webRTCClient = new WebRtcClient(localStreamSrc, signalingClient, createVideoElement)
+  webRTCClient = new WebRtcClient(localStreamSrc, signalingClient, createNewVideoElement)
 
   //НУЖНО добавить столько подключений, сколько пользователей будет
   //получаем пользователей 
@@ -76,7 +81,7 @@ async function initStreamAsync() {
     if(!data) return
     data.forEach((item: string) => {
       console.log(item)
-      webRTCClient.addRemoteParticipant(item, createVideoElement(item))
+      webRTCClient.addRemoteParticipant(item, createNewVideoElement(item))
     });
 
   })
@@ -86,8 +91,21 @@ async function initStreamAsync() {
   micRef?.value?.addEventListener('click', toggleMic)
 }
 
-function createVideoElement(userId: string): HTMLVideoElement{
-  return remoteVideoRef.value!
+function createNewVideoElement(userId: string): HTMLVideoElement {
+  const video = document.createElement('video');
+  video.autoplay = true;
+  video.playsInline = true;
+  video.className = 'video-player remote-video';
+  video.id = `video-${userId}`;
+
+  video.style.width = '300px';
+  video.style.height = '200px';
+  // Вставить в DOM
+  const container = document.getElementById('remote-videos-container');
+  if (container) {
+    container.appendChild(video);
+  }
+  return video;
 }
 
 //заплатка с рег
@@ -120,10 +138,16 @@ async function toggleMic () {
 <style scoped>
 
 .videos{
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   grid-template-columns: 1fr;
   height: 100vh;
   overflow:hidden;
+}
+
+.remote-videos-container {
+  display: flex;
 }
 
 .video-player{

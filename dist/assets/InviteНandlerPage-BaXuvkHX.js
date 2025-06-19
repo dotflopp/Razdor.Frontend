@@ -1,0 +1,1 @@
+import{d as r,m as u,u as a,h as c,H as i}from"./index-CNDI3ltj.js";const d=r({__name:"InviteНandlerPage",setup(m){const e=c(),o=i(),n=u(),s=a(),t=o.params.id;return t||console.error("Нет ID инвайта"),n.setPendingInvite(t),s.getToken==null?e.push("/login"):e.push("/acceptinvite"),(p,l)=>null}});export{d as default};
