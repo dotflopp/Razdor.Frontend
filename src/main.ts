@@ -1,8 +1,10 @@
 import { createApp } from 'vue'
+
 import App from './app/App.vue'
 import router from './app/router'
 import { createPinia } from 'pinia'
 import SignalRClient from './entities/services/signalr'
+
 
 const app = createApp(App)
 const pinia = createPinia()

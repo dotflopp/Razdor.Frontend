@@ -107,7 +107,7 @@ async function createInvitation() {
   if (!lifetime.value.trim()) return
 
   try {
-    const newInvitationId = await api.createInvitation(commStore.getactiveCommunityId! ,lifetime.value)
+    const newInvitationId = await api.createInvitation(commStore.getActiveCommunityId! ,lifetime.value)
     const url = `https://dotflopp.ru/invite/${newInvitationId.id}`;
     await navigator.clipboard.writeText(url)
     message.value = 'Invitation copied to clipboard'
@@ -145,6 +145,7 @@ function setCurrentChannel(channelId: string) {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-channel);
 }
 .sidebar-content {
   height: 100%;
@@ -189,6 +190,21 @@ function setCurrentChannel(channelId: string) {
   font-size: 14px;
 }
 
+
+.channeltype-select {
+  align-items: center;
+}
+
+.channeltype-select {
+  border: none;
+  background-color: #46484e;
+  color: white;
+  font-size: 14px;
+}
+.channeltype-select:focus {
+  outline: none;
+  box-shadow: none;
+}
 
 .add-btn {
   height: 100%;
@@ -250,7 +266,7 @@ function setCurrentChannel(channelId: string) {
   flex-shrink: 0;
   display: flex;
   height: 50px;
-  background-color: #282a2d;
+  background-color: var(--bg-channel-second);
   padding: 8px 16px;
   justify-content: center;
 }
@@ -323,7 +339,6 @@ function setCurrentChannel(channelId: string) {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  color: rgb(217, 209, 209);
 }
 .channel-item:hover .addChannel-btn-simple {
   opacity: 1;

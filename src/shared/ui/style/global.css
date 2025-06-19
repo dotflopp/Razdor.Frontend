@@ -1,0 +1,34 @@
+
+#app {
+  --text-color: white;
+  --bg-sidebar: #1d1f20;
+  --bg-sidebar-hover: #282a2d;
+  --bg-channel: #2f3136;
+  --bg-channel-second: #282a2d;
+  --bg-chat-top: #2f3136;
+  --bg-chat-main: #36393f;
+  --bg-char-file: #33363a;
+  --bg-chat-bottom: #2f3136;
+  --bg-chat-input: #40444b;
+  --bg-chat-button: #5865f2;
+  --bg-chat-button-hover: #5865f2;
+  --bg-memberbar-top: #282a2d;
+  --bg-member: #2f3136;
+}
+
+#app[data-theme="light"] {
+  --text-color: #2a2e33; /* Мягкий тёмный текст */
+  --bg-sidebar: #b8c4bb; /* Серо-зелёный фон сайдбара */
+  --bg-sidebar-hover: #a7b5a9; /* Темнее при наведении */
+  --bg-channel: #aebda4; /* Зеленоватый фон канала */
+  --bg-channel-second: #c5d1c8; /* Лёгкий фон внутри канала */
+  --bg-chat-top: #b8c4bb; /* Верх панели чата */
+  --bg-chat-main: #acc9bf; /* Основной фон чата — чуть темнее */
+  --bg-char-file: #a7b5a9; /* Для файлов и кнопок */
+  --bg-chat-bottom: #b8c4bb; /* Нижняя панель ввода */
+  --bg-chat-input: #d0ddcf; /* Фон поля ввода */
+  --bg-chat-button: #4caf50; /* Ярко-зелёная кнопка */
+  --bg-chat-button-hover: #3d9442;
+  --bg-memberbar-top: #c5d1c8; /* Панель участников сверху */
+  --bg-member: #b8c4bb; /* Фон панели участников */
+}

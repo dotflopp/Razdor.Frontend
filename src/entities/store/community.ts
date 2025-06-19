@@ -110,7 +110,8 @@ export const communityStore = defineStore('community', {
   getters: {
     allCommunities: (state) => state.communities,
     communityById: (state) => (id: string) => state.communities?.find(c => c.id === id) || null,
-    getactiveCommunityId : (state) => state.activeCommunityId,
+    getActiveCommunityId : (state) => state.activeCommunityId,
+    getActiveChannel: (state) => state.activeChannelId,
     getCommunityMembers: state => state.communityMembers,
     getInviteID: state => state.pendingInviteId,
     getInvite: state => state.invite

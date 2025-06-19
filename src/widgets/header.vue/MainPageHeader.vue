@@ -21,7 +21,7 @@
 .top-bar {
   flex-shrink: 0;
   height: 50px;
-  background-color: #2f3136;
+  background-color: var(--bg-chat-top);
   display: flex;
   align-items: center;
   padding: 0 20px;

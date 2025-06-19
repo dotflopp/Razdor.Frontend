@@ -61,7 +61,7 @@ const showModal = ref(false)
   height: 50px;
   gap: 15px;
   padding: 8px 16px;
-  background-color: #282a2d;
+  background-color: var(--bg-channel-second);
 }
 
 /* Контейнер для аватара и индикатора */

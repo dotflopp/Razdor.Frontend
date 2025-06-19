@@ -100,7 +100,7 @@ async function createCommunity() {
 
 .sidebar-communities {
   width:60px;
-  background-color: #1d1f20;
+  background-color: var(--bg-sidebar);
   border-bottom: 1px solid #444;
 }
 
@@ -121,7 +121,7 @@ async function createCommunity() {
 
 .community-item:hover,
 .community-item.active {
-  background-color: #282a2d;
+  background-color: var(--bg-sidebar-hover);
 }
 
 .community-avatar {
@@ -132,7 +132,6 @@ async function createCommunity() {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background-color: #5865f2;
 }
 
 .community-avatar img {
@@ -170,7 +169,7 @@ async function createCommunity() {
 }
 
 .add-btn:hover {
-  background-color: #3a3d44;
+  background-color: var(--bg-sidebar-hover);
   border-radius: 100px;
 }
 </style>

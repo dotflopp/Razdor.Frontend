@@ -1,9 +1,10 @@
 import type { AuthResponse, LoginRequest, RegisterRequest } from "../models/authModels";
-import type { Channel, ConnectionToken, NewChannel } from "../models/channelModels";
+import type { Channel, NewChannel } from "../models/channelModels";
 import type { Message } from "../models/chatModels";
 import type { Community, Invite, InviteExtended } from "../models/communityModels";
 import type { User, UserInCommunity, UserInfo } from "../models/userModels";
 import {userStore} from '@/entities/store/user'
+import type { ConnectionToken } from "../models/WebRTCModels";
 
 interface RequestInitWithParams extends RequestInit {
   params?: Record<string, any>;
@@ -154,49 +155,47 @@ export class RestApiClient {
       }
     });
   }
-  // /api/attachments/57052311402315776/57135294398332928/57135294440275968
+  // приходит из attacment url:/api/attachments/57052311402315776/57135294398332928/57135294440275968
   async getFileAttachment(url: string): Promise<File> {
-  const user = userStore()
-  const fullUrl = `https://dotflopp.ru${url}?access-token=${user.token}`;
-  const response = await fetch(fullUrl, {
-    method: 'GET'
-  });
+    const user = userStore()
+    const fullUrl = `https://dotflopp.ru${url}?access-token=${user.token}`;
+    const response = await fetch(fullUrl, {
+      method: 'GET'
+    });
 
-  if (!response.ok) {
-    throw new Error('Не удалось загрузить файл');
-  }
-
-  // Получаем содержимое файла
-  const blob = await response.blob();
-
-  // Получаем имя файла из Content-Disposition
-  const disposition = response.headers.get('Content-Disposition');
-  let filename = 'unknown-file';
-
-  if (disposition && disposition.indexOf('filename=') !== -1) {
-    const matches = /filename="?([^"]+)"?;?/g.exec(disposition);
-    if (matches != null && matches[1]) {
-      filename = matches[1];
+    if (!response.ok) {
+      throw new Error('Не удалось загрузить файл');
     }
-  }
 
-  // Удаляем расширение, если оно дублируется в filename*
-  // Это можно убрать, если тебе нужна только первая часть
-  const encodedMatches = /filename\*=UTF-8''([\w.%-]+)/g.exec(disposition || '');
-  if (encodedMatches && encodedMatches[1]) {
-    try {
-      filename = decodeURIComponent(encodedMatches[1]);
-    } catch {
-      // fallback to original filename
+    // Получаем содержимое файла
+    const blob = await response.blob();
+
+    // Получаем имя файла из Content-Disposition
+    const disposition = response.headers.get('Content-Disposition');
+    let filename = 'unknown-file';
+
+    if (disposition && disposition.indexOf('filename=') !== -1) {
+      const matches = /filename="?([^"]+)"?;?/g.exec(disposition);
+      if (matches != null && matches[1]) {
+        filename = matches[1];
+      }
     }
-  }
 
-  return new File([blob], filename, { type: blob.type });
-}
+    const encodedMatches = /filename\*=UTF-8''([\w.%-]+)/g.exec(disposition || '');
+    if (encodedMatches && encodedMatches[1]) {
+      try {
+        filename = decodeURIComponent(encodedMatches[1]);
+      } catch {
+        // fallback to original filename
+      }
+    }
+
+    return new File([blob], filename, { type: blob.type });
+  }
 
   //Соединение
-  async connectionToVoiceChannel(communityId: string, lifeTime: string): Promise<ConnectionToken> {
-    return await this.request<ConnectionToken>('POST',`/communities/${communityId}/connect`, true);
+  async connectionToVoiceChannel(channelId: string): Promise<ConnectionToken> {
+    return await this.request<ConnectionToken>('POST',`/channels/${channelId}/connect`, true);
   }
   
 }

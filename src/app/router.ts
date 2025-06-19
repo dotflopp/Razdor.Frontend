@@ -36,7 +36,9 @@ const routes = [
     path: '/rooms', 
     component: roomPage, 
     meta: { 
-      auth: true
+      auth: true,
+      needUser: true,
+      needCommunity: true,
     } 
   },
   { 

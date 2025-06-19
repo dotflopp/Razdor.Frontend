@@ -19,7 +19,6 @@
       
     </div>
     
-
     <!-- Нижняя часть (Дополнительная информация) -->
     <div class="user-info">
       <p><strong>Last change:</strong> {{ formattedTime(user.credentialsChangeDate) }}</p>

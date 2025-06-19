@@ -34,11 +34,11 @@ const commMembers = computed(() => commStore.getCommunityMembers)
 <style scoped>
 .top-bar {
   flex-shrink: 0;
-  background-color:#282a2d;
+  background-color: var(--bg-memberbar-top);
   height: 50px;
 }
 .sidebar-users {
-  background-color: #2f3136;
+  background-color: var(--bg-member);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -64,7 +64,7 @@ const commMembers = computed(() => commStore.getCommunityMembers)
 
 .user-item:hover,
 .user-item.active {
-  background-color: #282a2d;
+  background-color: var(--bg-sidebar-hover);
 }
 
 .user-avatar {

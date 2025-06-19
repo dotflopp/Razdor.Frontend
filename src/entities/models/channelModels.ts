@@ -25,10 +25,6 @@ export interface NewChannel{
   parentId: string;
 }
 
-export interface ConnectionToken {
-  token: string;
-}
-
 
 
 

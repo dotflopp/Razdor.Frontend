@@ -1,71 +1,3 @@
-<script setup lang="ts">
-import type { RefSymbol } from '@vue/reactivity';
-import { onMounted, ref } from 'vue';
-import WebRtcConnection from '@/entities/api/apiWebrtc';
-
-let localVideoRef = ref<HTMLVideoElement | null>(null); 
-let remoteVideoRef = ref<HTMLVideoElement | null>(null); 
-let cameraRef = ref<HTMLElement|null>(null)
-let micRef = ref<HTMLElement|null>(null)
-
-let localStreamSrc: MediaStream
-let peerConnection: WebRtcConnection
-let remoteStreamSrc: MediaStream
-
-let cameraBtnStyle = ref<any | null>(null)
-let micBtnStyle = ref<any | null>(null)
-
-
-let initStreamAsync = async () => {
-  //видео контент
-  if (localVideoRef.value == null) return
-  localStreamSrc = await navigator.mediaDevices.getUserMedia({video: true, audio: true})
-  localVideoRef.value.srcObject = localStreamSrc;
-
-
-  
-  peerConnection = new WebRtcConnection(localStreamSrc)
-  await peerConnection.createPeerConnection(remoteVideoRef.value!)
-
-  await peerConnection.startCall()
-
-  //регистрация ивентов
-  cameraRef?.value?.addEventListener('click', toggleCamera)
-  micRef?.value?.addEventListener('click', toggleMic)
-}
-
-//заплатка с рег
-let toggleCamera = async () => {
-    let videoTrack = localStreamSrc.getTracks().find(track => track.kind === 'video')
-
-    if(videoTrack!.enabled){
-        videoTrack!.enabled = false
-        cameraBtnStyle.value = { backgroundColor: 'rgb(255, 80, 80)' }
-    }else{
-        videoTrack!.enabled = true
-        cameraBtnStyle.value = { backgroundColor: 'rgb(179, 102, 249, .9)' }
-    }
-}
-
-let toggleMic = async () => {
-    let audioTrack = localStreamSrc.getTracks().find(track => track.kind === 'audio')
-
-    if(audioTrack!.enabled){
-        audioTrack!.enabled = false
-        micBtnStyle.value = { backgroundColor: 'rgb(255, 80, 80)'}
-    }else{
-        audioTrack!.enabled = true
-        micBtnStyle.value = { backgroundColor: 'rgb(179, 102, 249, .9)' }
-    }
-}
-//document.getElementById('camera-btn').addEventListener('click', toggleCamera)
-//document.getElementById('mic-btn').addEventListener('click', toggleMic)
-
-
-onMounted(initStreamAsync)
-
-</script>
-
 <template>
   <!-- контейнер с видео -->
   <div class="videos">
@@ -94,24 +26,110 @@ onMounted(initStreamAsync)
 </template>
 
 
-<style lang="css">
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import { WebRtcClient } from '@/entities/api/apiWebrtc';
+import { SignalingClient } from '@/entities/services/webSocket';
+import { RestApiClient } from '@/entities/api/apiClient';
+import { communityStore } from '@/entities/store/community';
+
+const api = new RestApiClient('https://dotflopp.ru/api')
+const commStore = communityStore()
+
+const localVideoRef = ref<HTMLVideoElement | null>(null); 
+const remoteVideoRef = ref<HTMLVideoElement | null>(null); 
+const cameraRef = ref<HTMLElement|null>(null)
+const micRef = ref<HTMLElement|null>(null)
+
+let webRTCClient: WebRtcClient
+let localStreamSrc: MediaStream
+
+let cameraBtnStyle = ref<any | null>(null)
+let micBtnStyle = ref<any | null>(null)
+
+let signalingClient: SignalingClient = null!;
+
+onMounted(async() => {
+ 
+  const request = await api.connectionToVoiceChannel(commStore.getActiveChannel!)
+  console.log(request.token)
+
+  signalingClient = new SignalingClient("wss://dotflopp.ru/signaling", request.token);
+
+  await initStreamAsync()
+
+  await signalingClient.start()
+})
+
+async function initStreamAsync() {
+  //видео контент
+  if (localVideoRef.value == null) return
+  localStreamSrc = await navigator.mediaDevices.getUserMedia({video: true, audio: true})
+  localVideoRef.value.srcObject = localStreamSrc;
+  
+  webRTCClient = new WebRtcClient(localStreamSrc, signalingClient, createVideoElement)
+
+  //НУЖНО добавить столько подключений, сколько пользователей будет
+  //получаем пользователей 
+  signalingClient.on("userInChannel", async ({ data }) => {
+    console.log(data)
+    if(!data) return
+    data.forEach((item: string) => {
+      console.log(item)
+      webRTCClient.addRemoteParticipant(item, createVideoElement(item))
+    });
+
+  })
+  
+  //регистрация ивентов
+  cameraRef?.value?.addEventListener('click', toggleCamera)
+  micRef?.value?.addEventListener('click', toggleMic)
 }
 
+function createVideoElement(userId: string): HTMLVideoElement{
+  return remoteVideoRef.value!
+}
+
+//заплатка с рег
+async function toggleCamera () {
+  let videoTrack = localStreamSrc.getTracks().find(track => track.kind === 'video')
+
+    if(videoTrack!.enabled){
+        videoTrack!.enabled = false
+        cameraBtnStyle.value = { backgroundColor: 'rgb(255, 80, 80)' }
+    }else{
+        videoTrack!.enabled = true
+        cameraBtnStyle.value = { backgroundColor: 'rgb(179, 102, 249, .9)' }
+    }
+}
+
+async function toggleMic () {
+  let audioTrack = localStreamSrc.getTracks().find(track => track.kind === 'audio')
+
+    if(audioTrack!.enabled){
+        audioTrack!.enabled = false
+        micBtnStyle.value = { backgroundColor: 'rgb(255, 80, 80)'}
+    }else{
+        audioTrack!.enabled = true
+        micBtnStyle.value = { backgroundColor: 'rgb(179, 102, 249, .9)' }
+    }
+}
+
+</script>
+
+<style scoped>
+
 .videos{
-    display: grid;
-    grid-template-columns: 1fr;
-    height: 100vh;
-    overflow:hidden;
+  display: grid;
+  grid-template-columns: 1fr;
+  height: 100vh;
+  overflow:hidden;
 }
 
 .video-player{
-    background-color: black;
-    width: 100%;
-    height: 100vh;
+  background-color: black;
+  width: 100%;
+  height: 100vh;
 }
 .video-player:first-child {
   object-fit: cover;
@@ -121,25 +139,25 @@ onMounted(initStreamAsync)
 }
 
 .smallFrame{
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    height: 170px;
-    width: 300px;
-    border-radius: 5px;
-    border:2px solid #b366f9;
-    -webkit-box-shadow: 3px 3px 15px -1px rgba(0,0,0,0.77);
-    box-shadow: 3px 3px 15px -1px rgba(0,0,0,0.77);
-    z-index: 999;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  height: 170px;
+  width: 300px;
+  border-radius: 5px;
+  border:2px solid #b366f9;
+  -webkit-box-shadow: 3px 3px 15px -1px rgba(0,0,0,0.77);
+  box-shadow: 3px 3px 15px -1px rgba(0,0,0,0.77);
+  z-index: 999;
 }
 
 #controls{
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform:translateX(-50%);
-    display: flex;
-    gap: 1em;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform:translateX(-50%);
+  display: flex;
+  gap: 1em;
 }
 
 
@@ -154,23 +172,22 @@ onMounted(initStreamAsync)
 }
 
 .control-container img{
-    height: 30px;
-    width: 30px;
+  height: 30px;
+  width: 30px;
 }
 
 #leave-btn{
-    background-color: rgb(255,80,80, 1);
+  background-color: rgb(255,80,80, 1);
 }
 
 @media screen and (max-width:600px) {
-        .smallFrame{
-            height: 80px;
-            width: 120px;
-        }
-
-        .control-container img{
-            height: 20px;
-            width: 20px;
-        }
+  .smallFrame {
+      height: 80px;
+      width: 120px;
+  }
+  .control-container img {
+      height: 20px;
+      width: 20px;
+  }
 }
 </style>

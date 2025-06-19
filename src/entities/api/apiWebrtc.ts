@@ -9,134 +9,120 @@ const configuration = {
     { urls: 'turn:fr-turn2.xirsys.com:3478?transport=udp',
       username: "b_x8c3H9otu8vC-LwmnAsPdEQnWlh_zHf54JGX8KJx2wBztiX1udhli1_MK6sxHMAAAAAGcuKjdMdWt1cw==",
       credential: "c8628fa0-9de3-11ef-a83d-0242ac120004"
-     }, // STUN-сервер
+     },
   ],
   encodedInsertabelStream: true,
 };
 
 // Класс для создания пиир соединения 
-class WebRtcConnection {
-  private peerConnection: RTCPeerConnection;
+export class WebRtcClient {
+  private peerConnections: Map<string, RTCPeerConnection> = new Map();
   private signalingClient: SignalingClient;
   private localStream: MediaStream;
+  private createVideoElement: (userId: string) => HTMLVideoElement;
 
   // Добавляем очередь для кандидатов
   private pendingCandidates: RTCIceCandidate[] = [];
 
-  constructor(localStream: MediaStream, ) {
-    this.signalingClient = new SignalingClient("ws://localhost:3000");
-    this.peerConnection = new RTCPeerConnection(configuration);
-    
-
-    //получаем все треки(аудио видео дорожки) у локального стрима 
-
+  constructor(localStream: MediaStream, signalingClient: SignalingClient, createVideoElement: (userId: string) => HTMLVideoElement) {
+    this.signalingClient = signalingClient
     this.localStream = localStream;
-    this.localStream.getTracks().forEach(track => {
-      this.peerConnection.addTrack(track, localStream)
-    })
     this.registerSocketHandlers();
+    this.createVideoElement = createVideoElement;
   }
 
-  //создаем соединение между Peer, устанавливаеи прослушивающие сокеты
-  public createPeerConnection = async (remoteVideo: HTMLVideoElement) => {
-    await this.signalingClient.start()
-    // под вопросом, стоит вынести в отдельный метод
-    this.peerConnection.ontrack = event =>  {
-      const remoteStream = event.streams[0]
-      remoteVideo.srcObject = remoteStream;
-    }
-
-    //получение ice кандидата
-    this.peerConnection.onicecandidate = this.handleICECandidateEvent
-    this.peerConnection.onconnectionstatechange = this.handleSignalingSateEvent
-    this.peerConnection.onicegatheringstatechange = this.handleIceConnectionStateChangeEvent;
-  }
-
-  private handleIceConnectionStateChangeEvent = (event: Event) => {
-    //console.log(event);
-  };
-
-  private handleSignalingSateEvent = (event: Event) => {
-    if (this.peerConnection.iceConnectionState === 'connected') {
-      const stats = this.peerConnection.getStats()
-      //console.log(stats)
-    }
-  }
-
-  private handleICECandidateEvent = (event: RTCPeerConnectionIceEvent) => {
-    if(event.candidate) {
-      this.signalingClient.send<any>('ice-candidate', event.candidate)
-      //console.log('send icecandidate')
-    }
-  }
-
-  private registerSocketHandlers = () => {
-    this.signalingClient.on("offer", async (offerData) => {
-      
-      console.log('emit offer from another peer')
-      console.log(offerData)
-
-      const remoteDesc = new RTCSessionDescription(offerData.offer);
-      await this.peerConnection.setRemoteDescription(remoteDesc);
-      const answer = await this.peerConnection.createAnswer();
-      await this.peerConnection.setLocalDescription(answer);
-
-      this.signalingClient.send("answer", answer);
-
-      console.log('send answer')
-    });
+  public addRemoteParticipant(userId: string, remoteVideo: HTMLVideoElement): void {
+    const pc = new RTCPeerConnection(configuration);
+    this.peerConnections.set(userId, pc);
     
-    this.signalingClient.on("answer", async (answer) => {
-      console.log('emit answer from another peer')
-      
-      await this.peerConnection.setRemoteDescription(answer);
-      console.log('Обмен закончен')
-      // Применяем отложенные кандидаты
-      for (const candidate of this.pendingCandidates) {
-        console.log(candidate)
-        await this.peerConnection.addIceCandidate(candidate);
+    this.localStream.getTracks().forEach(track => {
+      pc.addTrack(track, this.localStream)
+    })
+    
+    this.setupPeerConnection(pc, userId, remoteVideo);
+
+    this.createOfferAndSend(userId);
+  }
+
+  private setupPeerConnection(pc: RTCPeerConnection, userId: string, remoteVideo: HTMLVideoElement): void {
+    pc.ontrack = event => {
+      if (event.streams[0]) {
+        remoteVideo.srcObject = event.streams[0];
       }
-      this.pendingCandidates = [];
+    };
+
+    pc.onicecandidate = event => {
+      if (event.candidate) {
+        console.log('send icecandidate')
+        this.signalingClient.send("ice-candidate", {to: userId, data: event.candidate });
+      }
+    };
+
+    pc.onconnectionstatechange = () => {
+      if (pc.connectionState === 'connected') {
+        console.log(`Соединение с ${userId} установлено`);
+      }
+    };
+  }
+
+  private createOfferAndSend(userId: string): void {
+    const pc = this.peerConnections.get(userId);
+    if (!pc) return;
+
+    pc.createOffer()
+      .then(offer => pc.setLocalDescription(offer))
+      .then(() => {
+        this.signalingClient.send("offer", {to: userId, data: pc.localDescription });
+        console.log("offer send")
+      })
+      .catch(err => console.error("Ошибка при создании offer:", err));
+  }
+
+  private registerSocketHandlers(): void {
+    this.signalingClient.on("offer", async ({ from, data }) => {
+      console.log('offer emit')
+      const userId = from
+      let pc = this.peerConnections.get(userId);
+      if (!pc) {
+        pc = new RTCPeerConnection(configuration);
+        this.peerConnections.set(userId, pc);
+        var remoteVideo = this.createVideoElement(from) 
+        this.setupPeerConnection(pc, userId, remoteVideo);
+      }
+      await pc.setRemoteDescription(new RTCSessionDescription(data));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      this.signalingClient.send("answer", { to: userId, data: answer });
+      console.log("answer send")
     });
-  
-    this.signalingClient.on("ice-candidate", async (candidate) => {
-      if (candidate) {
-        if (!this.peerConnection.remoteDescription) {
-          // Если remoteDescription ещё не установлен — сохраняем в очередь
-          this.pendingCandidates.push(candidate);
-          console.log("сохраняем в очередь")
-        } else {
-          // Иначе применяем сразу
-          console.log(candidate)
-          await this.peerConnection.addIceCandidate(candidate);
+
+    this.signalingClient.on("answer", async ({ from, data }) => {
+      const userId = from
+      const pc = this.peerConnections.get(userId);
+      if (pc) {
+        await pc.setRemoteDescription(new RTCSessionDescription(data));
+
+        //применяем отложенные айс кандидаты
+        for (const candidate of this.pendingCandidates) {
+          await pc.addIceCandidate(candidate);
         }
+        this.pendingCandidates = [];
       }
-    })
+    });
 
-    this.signalingClient.on("end-call", async () => {
-      this.endCall()
-    })
-
+    this.signalingClient.on("ice-candidate", async ({ from, data }) => {
+      console.log('ice emit')
+      const userId = from
+      const pc = this.peerConnections.get(userId);
+      if (pc && pc.remoteDescription) {
+        try {
+          await pc.addIceCandidate(data);
+        } catch (e) {
+          console.warn("Не удалось добавить ICE кандидата:", e);
+        }
+      } else {
+        this.pendingCandidates.push(data);
+      }
+    });
   }
-
-  public startCall = async () => {
-    //заходим в руму 
-    //this.signalingClient.send("connect", {} );
-
-    //Создаем sdp пакет и отправляем его
-    const offer = await this.peerConnection.createOffer();
-    await this.peerConnection.setLocalDescription(offer);
-
-    await this.signalingClient.send("offer", {offer});
-    console.log('send Offer from startCall')
-  }
-
-  public endCall = async () => {
-    if(this.peerConnection) {
-      this.peerConnection.close()
-    }
-  }
-
 }
-
-export default WebRtcConnection

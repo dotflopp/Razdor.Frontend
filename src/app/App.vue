@@ -1,10 +1,15 @@
+<template>
+  <div id="app" :data-theme="theme">
+    <RouterView />
+  </div>
+</template>
+
 <script setup lang="ts">
 import { userStore } from '@/entities/store/user';
 import { RouterView } from 'vue-router'
-import { onMounted } from 'vue';
+import { onMounted, provide, ref } from 'vue';
 import router from './router';
-
-
+import '@/shared/ui/style/global.css'
 
 onMounted(async () => {
   const store = userStore()
@@ -16,13 +21,25 @@ onMounted(async () => {
     router.push('/login')
   }
 })
-</script>
 
-<template>
-  <div id="app">
-    <RouterView />
-  </div>
-</template>
+const theme = ref('dark')
+
+function toggleTheme() {
+  theme.value = theme.value === 'dark' ? 'light' : 'dark'
+  localStorage.setItem('theme', theme.value)
+}
+
+// Загрузка сохранённой темы из localStorage
+if (localStorage.getItem('theme')) {
+  theme.value = localStorage.getItem('theme')!
+} else {
+  localStorage.setItem('theme', 'dark')
+}
+
+provide('toggleTheme', toggleTheme)
+provide('theme', theme)
+defineExpose({ toggleTheme })
+</script>
 
 <style>
 * {
@@ -40,7 +57,7 @@ onMounted(async () => {
 }
 html {
   background-color: #23272a;
-  color: white;
+  color: var(--text-color);
 }
 
 </style>

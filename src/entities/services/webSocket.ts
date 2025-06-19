@@ -4,15 +4,18 @@ export class SignalingClient {
   private url: string
   private socket: WebSocket | undefined;
   private handlers: Map<WsEvent, ((data: any) => void)[]> = new Map();
+  private token: string 
 
-  constructor(url: string) {
+  constructor(url: string, token: string) {
     this.url = url
+    this.token = token
   }
 
   public async start()  {
-    this.socket = new WebSocket(this.url);
+    this.socket = new WebSocket(`${this.url}?access-token=${this.token}`);
     this.setupListeners();
   }
+  
   private setupListeners(): void {
     this.socket?.addEventListener('open', () => {
       console.log('WebSocket подключен');
@@ -20,12 +23,10 @@ export class SignalingClient {
 
     this.socket?.addEventListener('message', (event) => {
       try {
-        //console.log(event.data.toString())
         const message: WsMessage = JSON.parse(event.data.toString());
-        
         const listeners = this.handlers.get(message.event);
         if (listeners) {
-          listeners.forEach((handler) => handler(message.data));
+          listeners.forEach((handler) => handler(message.body));
         }
       } catch (err) {
         console.error('Ошибка парсинга сообщения:', err);
@@ -44,8 +45,8 @@ export class SignalingClient {
     this.handlers.get(event)?.push(handler);
   }
 
-  public send<T>(event: WsEvent, data: T): void {
-    const message = { event, data };
+  public send<T>(event: WsEvent, body: T): void {
+    const message = { event, body };
     if (this.socket?.readyState === WebSocket.OPEN) {
       this.socket?.send(JSON.stringify(message));
     } else {

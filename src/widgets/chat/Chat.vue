@@ -183,7 +183,7 @@ function handleDelete(index: number) {
   flex-grow: 1;
   padding: 20px;
   overflow-y: auto;
-  background-color: #36393f;
+  background-color: var(--bg-chat-main);
 }
 .message-container {
   display: flex;
@@ -195,7 +195,7 @@ function handleDelete(index: number) {
   display: flex;
   flex-direction: row;
   justify-content: start;
-  background-color: #33363a;
+  background-color: var(--bg-char-file);
 }
 .message {
   display: flex;
@@ -262,7 +262,7 @@ function handleDelete(index: number) {
 .message-input {
   height: 50px;
   flex-shrink: 0;
-  background-color: #2f3136;
+  background-color: var(--bg-chat-bottom);
   display: flex;
   align-items: center;
   transition: background-color 0.3s ease;
@@ -275,23 +275,21 @@ function handleDelete(index: number) {
   padding: 10px;
   border: none;
   border-radius: 5px;
-  background-color: #40444b;
-  color: white;
+  background-color: var(--bg-chat-input);
 }
 
 .send-button {
   margin-left: 10px;
   padding: 10px 20px;
-  background-color: #5865f2;
+  background-color: var(--bg-chat-button);
   border: none;
   border-radius: 5px;
-  color: white;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .send-button:hover {
-  background-color: #4752c4;
+  background-color:  var(--bg-chat-button-hover);
 }
 /* Общие стили для скроллбара */
 .chat-area::-webkit-scrollbar {
@@ -303,11 +301,11 @@ function handleDelete(index: number) {
 }
 
 .chat-area::-webkit-scrollbar-thumb {
-  background-color: #5865f2; /* Цвет как у Discord */
+  background-color: var(--bg-chat-bottom); 
   border-radius: 4px;
 }
 
 .chat-area::-webkit-scrollbar-thumb:hover {
-  background-color: #4752c4;
+  background-color: var(--bg-chat-bottom);
 }
 </style> 

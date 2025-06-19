@@ -1,8 +1,8 @@
-export type WsEvent = 'offer' | 'answer' | 'ice-candidate' | 'connect' | 'end-call';
+export type WsEvent = 'userInChannel' | 'userJoinRoom' | 'userLeaveRoom' | 'offer' | 'answer' | 'ice-candidate';
 
 export interface WsMessage<T = any> {
   event: WsEvent;
-  data: T;
+  body: T;
 }
 
 export interface OfferData {
@@ -18,3 +18,6 @@ export interface IceCandidateData {
   candidate: RTCIceCandidateInit;
 }
 
+export interface ConnectionToken {
+  token: string
+}
