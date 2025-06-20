@@ -59,5 +59,8 @@ html {
   background-color: #23272a;
   color: var(--text-color);
 }
+h2 {
+  color: var(--text-color);
+}
 
 </style>

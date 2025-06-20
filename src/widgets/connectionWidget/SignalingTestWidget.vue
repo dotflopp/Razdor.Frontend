@@ -98,8 +98,6 @@ function createNewVideoElement(userId: string): HTMLVideoElement {
   video.className = 'video-player remote-video';
   video.id = `video-${userId}`;
 
-  video.style.width = '300px';
-  video.style.height = '200px';
   // Вставить в DOM
   const container = document.getElementById('remote-videos-container');
   if (container) {
@@ -137,30 +135,37 @@ async function toggleMic () {
 
 <style scoped>
 
-.videos{
-  display: flex;
+.videos {
+
+  position: relative;
+  height: calc(100vh - 100px); /* Оставляем место для контроллеров */
+  width: 100%;
+}
+
+#remote-videos-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+  padding: 15px;
+  height: 100%;
   align-items: center;
-  justify-content: center;
-  grid-template-columns: 1fr;
-  height: 100vh;
-  overflow:hidden;
+  justify-items: center;
+  overflow-y: auto; /* Если много видео */
 }
 
-.remote-videos-container {
-  display: flex;
-}
-
-.video-player{
+.video-player {
   background-color: black;
   width: 100%;
-  height: 100vh;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border: 2px solid #b366f9;
 }
 .video-player:first-child {
   object-fit: cover;
 }
-#user-2{
-    display: none;
-}
+
 
 .smallFrame{
   position: fixed;
